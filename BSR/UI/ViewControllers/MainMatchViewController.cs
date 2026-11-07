@@ -55,6 +55,7 @@ namespace BSR.UI.ViewControllers
         [UIValue("is-idle-state")] public bool IsIdleState { get; set; } = true;
         [UIValue("is-draft-state")] public bool IsDraftState { get; set; }
         [UIValue("is-ready-state")] public bool IsReadyState { get; set; }
+        [UIValue("is-waiting-state")] public bool IsWaitingState { get; set; }
         [UIValue("is-round-result-state")] public bool IsRoundResultState { get; set; }
         [UIValue("is-match-over-state")] public bool IsMatchOverState { get; set; }
 
@@ -93,6 +94,9 @@ namespace BSR.UI.ViewControllers
         [UIValue("ready-timer-text")] public string ReadyTimerText { get; set; } = "Downloading Map...";
         [UIValue("ready-btn-text")] public string ReadyBtnText { get; set; } = "READY!";
         [UIValue("can-click-ready")] public bool CanClickReady { get; set; }
+
+        // --- WAITING FOR OPPONENT PROPERTIES ---
+        [UIValue("waiting-my-score")] public string WaitingMyScore { get; set; } = "Your Score: 0";
 
         // --- ROUND RESULTS & MATCH OVER PROPERTIES ---
         [UIValue("round-result-header")] public string RoundResultHeader => _currentMultiplier > 1 ? $"ROUND {_currentRound} DAMAGE REPORT ({_currentMultiplier}x MULTIPLIER!)" : $"ROUND {_currentRound} DAMAGE REPORT";
@@ -151,9 +155,14 @@ namespace BSR.UI.ViewControllers
             NotifyPropertyChanged(nameof(P2HpText));
         }
 
-        private void SetState(bool idle = false, bool draft = false, bool ready = false, bool roundResult = false, bool matchOver = false)
+        private void SetState(bool idle = false, bool draft = false, bool ready = false, bool waiting = false, bool roundResult = false, bool matchOver = false)
         {
-            IsIdleState = idle; IsDraftState = draft; IsReadyState = ready; IsRoundResultState = roundResult; IsMatchOverState = matchOver;
+            IsIdleState = idle;
+            IsDraftState = draft;
+            IsReadyState = ready;
+            IsWaitingState = waiting;
+            IsRoundResultState = roundResult;
+            IsMatchOverState = matchOver;
             RefreshUI();
         }
 
@@ -275,7 +284,13 @@ namespace BSR.UI.ViewControllers
                         data["DownloadUrl"]?.ToString(),
                         data["Difficulty"]?.ToString() ?? "ExpertPlus",
                         data["Characteristic"]?.ToString() ?? "Standard",
-                        myScore => _ = _net.SendPacketAsync("SUBMIT_SCORE", new { score = myScore }),
+                        myScore =>
+                        {
+                            // Display the "Waiting for Opponent" screen with your score as soon as you finish!
+                            WaitingMyScore = $"Your Score: {myScore:N0}";
+                            SetState(waiting: true);
+                            _ = _net.SendPacketAsync("SUBMIT_SCORE", new { score = myScore });
+                        },
                         () => _ = _net.SendPacketAsync("FORFEIT_MATCH"));
                     break;
 

@@ -2,7 +2,6 @@
 
     <!-- IDLE SCREEN: CENTER MATCHMAKING QUEUE HUB -->
     <vertical active='~is-idle-state' align='Center' spacing='3' pad='4'>
-
         <vertical bg='round-rect-panel' pad='4' pref-width='65' spacing='1.5' align='Center'>
             <text text='~server-status-text' font-size='4.2' align='Center'/>
 
@@ -72,6 +71,17 @@
         <text text='~ready-timer-text' font-size='7' color='#FFCC00' align='Center'/>
 
         <button text='~ready-btn-text' interactable='~can-click-ready' on-click='on-ready-click' pref-width='42' pref-height='10'/>
+    </vertical>
+
+    <!-- STATE 1.75: WAITING FOR OPPONENT TO FINISH MAP -->
+    <vertical active='~is-waiting-state' spacing='2.5' pad='4' align='Center'>
+        <text text='SONG FINISHED!' font-size='6.5' align='Center' color='#00FFCC'/>
+
+        <vertical bg='round-rect-panel' pad='4' pref-width='65' spacing='2' align='Center'>
+            <text text='~waiting-my-score' font-size='5.2' color='#FFFFFF' align='Center'/>
+            <text text='Waiting for opponent to finish playing...' font-size='4' color='#FFCC00' align='Center'/>
+            <text text='Results will calculate automatically when both finish' font-size='3.2' color='#888888' align='Center'/>
+        </vertical>
     </vertical>
 
     <!-- STATE 2: ANIMATED ROUND DAMAGE RESULTS (With 60s After-Map Timer) -->
