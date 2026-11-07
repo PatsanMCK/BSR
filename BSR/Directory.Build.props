@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project>
+
+  <PropertyGroup>
+    <PluginId>BSR</PluginId>
+    <PluginName>BS Ranked</PluginName>
+    <Authors>patsanmck</Authors>
+    <Version>1.0.0</Version>
+    <GameVersion>1.40.8</GameVersion>
+    <Description>osu!lazer style 1v1 Ranked Matchmaking for Beat Saber</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <DependsOn Include="BSIPA" Version="^4.3.0"/>
+    <DependsOn Include="SiraUtil" Version="^3.1.0"/>
+    <DependsOn Include="BeatSaberMarkupLanguage" Version="^1.11.0"/>
+    <DependsOn Include="BS Utils" Version="^1.14.0"/>
+    <DependsOn Include="SongCore" Version="^3.12.0"/>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <BSMTProjectType>BSIPA</BSMTProjectType>
+    <GenerateManifest>true</GenerateManifest>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' != 'Release'">
+    <DisableZipRelease>true</DisableZipRelease>
+  </PropertyGroup>
+
+</Project>

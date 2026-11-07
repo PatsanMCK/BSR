@@ -1,0 +1,50 @@
+<bg xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/BSMLSchema.xsd'>
+    <vertical spacing='2' pad='3' align='Center'>
+        <text text='PROFILE' font-size='5.2' align='Center' color='#FFFFFF'/>
+
+        <!-- 2-COLUMN PROFILE PANEL -->
+        <horizontal spacing='3' align='Center'>
+
+            <!-- LEFT COLUMN: PFP, NAME, LEADERBOARD RANK -->
+            <vertical bg='round-rect-panel' pad='3' pref-width='38' align='Center' spacing='1.5'>
+                <image id='pfp-img' pref-width='20' pref-height='20' preserve-aspect='true'/>
+                <text text='~player-name' font-size='4.2' overflow-mode='Ellipsis' align='Center'/>
+                <text text='~avg-stars-text' font-size='2.6' color='#888888' align='Center'/>
+            </vertical>
+
+            <!-- RIGHT COLUMN: RANK TIER (TOP) & CLICKABLE ELO (BOTTOM) -->
+            <vertical bg='round-rect-panel' pad='3' pref-width='38' align='Center' spacing='1'>
+                <text text='TIER &amp; RATING' font-size='3' color='#AAAAAA' align='Center'/>
+
+                <!-- Rank Tier on Top -->
+                <clickable-text text='~rank-tier' font-size='7.5' align='Center' on-click='on-rank-click' default-color='#FFD700' highlight-color='#FFFFFF'/>
+
+                <!-- ELO Below It (Clickable) -->
+                <clickable-text text='~elo-clickable-text' font-size='4.5' align='Center' on-click='on-rank-click' default-color='#FFFFFF' highlight-color='#00FFCC'/>
+
+                <text text='(click to view rank info)' font-size='2.1' color='#777777' align='Center'/>
+                <text text='~record-text' font-size='2.7' color='#AAAAAA' align='Center'/>
+            </vertical>
+
+        </horizontal>
+    </vertical>
+
+    <!-- TETR.IO RANK EXPLANATION MODAL -->
+    <modal id='rank-modal' show-event='show-rank-modal' hide-event='hide-rank-modal' click-off-closes='true' move-to-center='true' size-delta-x='84' size-delta-y='68'>
+        <vertical pad='4' spacing='2' align='Center'>
+            <horizontal bg='round-rect-panel' pad='3' spacing='2'>
+                <vertical spacing='1'>
+                    <text text='&lt;color=#FF0055&gt;X Tier&lt;/color&gt; (2200+ ELO) : Master' font-size='3.1'/>
+                    <text text='&lt;color=#E02424&gt;U Tier&lt;/color&gt; (2000 - 2199 ELO) : Expert+' font-size='3.1'/>
+                    <text text='&lt;color=#FF8800&gt;SS Tier&lt;/color&gt; (1850 - 1999 ELO) : Expert' font-size='3.1'/>
+                    <text text='&lt;color=#FFCC00&gt;S Tier&lt;/color&gt; (1550 - 1849 ELO) : S- / S / S+' font-size='3.1'/>
+                    <text text='&lt;color=#00E676&gt;A Tier&lt;/color&gt; (1250 - 1549 ELO) : A- / A / A+' font-size='3.1'/>
+                    <text text='&lt;color=#2979FF&gt;B Tier&lt;/color&gt; (950 - 1249 ELO) : B- / B / B+ &lt;color=#888888&gt;(Starting ELO: 1000)&lt;/color&gt;' font-size='3.1'/>
+                    <text text='&lt;color=#BA68C8&gt;C Tier&lt;/color&gt; (650 - 949 ELO) : C- / C / C+' font-size='3.1'/>
+                    <text text='&lt;color=#90A4AE&gt;D Tier&lt;/color&gt; (Under 650 ELO) : D / D+' font-size='3.1'/>
+                </vertical>
+            </horizontal>
+            <button text='Close' on-click='close-rank-modal' pref-width='24' pref-height='7'/>
+        </vertical>
+    </modal>
+</bg>

@@ -1,0 +1,24 @@
+<bg xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/BSMLSchema.xsd'>
+    <vertical spacing='2' pad='4' align='Center'>
+        <text text='OPPONENT' font-size='5.5' align='Center' color='#FF5555'/>
+        <image id='opponent-pfp-img' pref-width='22' pref-height='22' preserve-aspect='true'/>
+        <text text='~opponent-name' font-size='4.8' overflow-mode='Ellipsis' align='Center'/>
+
+        <horizontal bg='round-rect-panel' pad='3' spacing='6'>
+            <vertical align='Center'>
+                <text text='RANK' font-size='3.2' color='#AAAAAA' align='Center'/>
+                <text text='~opponent-tier' font-size='5.5' align='Center'/>
+            </vertical>
+            <vertical align='Center'>
+                <text text='ELO' font-size='3.2' color='#AAAAAA' align='Center'/>
+                <text text='~opponent-elo' font-size='5' color='#FFFFFF' align='Center'/>
+            </vertical>
+        </horizontal>
+
+        <text text='~opponent-avg-stars' font-size='3.3' color='#888888' align='Center'/>
+        <text text='~opponent-hp-text' font-size='4.2' color='#00FF66' align='Center'/>
+
+        <!-- FORFEIT BUTTON BELOW OPPONENT -->
+        <button text='~forfeit-btn-text' interactable='~can-forfeit' on-click='on-forfeit-click' pref-width='36' pref-height='8'/>
+    </vertical>
+</bg>

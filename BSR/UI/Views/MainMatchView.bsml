@@ -1,0 +1,127 @@
+<bg xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/BSMLSchema.xsd'>
+
+    <!-- IDLE SCREEN: CENTER MATCHMAKING QUEUE HUB -->
+    <vertical active='~is-idle-state' align='Center' spacing='3' pad='4'>
+
+        <vertical bg='round-rect-panel' pad='4' pref-width='65' spacing='1.5' align='Center'>
+            <text text='~server-status-text' font-size='4.2' align='Center'/>
+
+            <!-- Queuing on top, In Queue: x below it -->
+            <text text='Queuing...' active='~is-queueing' font-size='6.5' color='#FFFFFF' align='Center'/>
+            <text text='~queue-status' font-size='4' color='#CCCCCC' align='Center'/>
+
+            <button text='~queue-btn-text' interactable='~is-server-online' on-click='on-queue-click' pref-width='45' pref-height='12'/>
+            <button text='Reconnect to Server' active='~is-server-offline' on-click='on-reconnect-click' pref-width='38' pref-height='9'/>
+        </vertical>
+    </vertical>
+
+    <!-- STATE 1: TURN-BASED CARD DRAFT (With 90s Map Pick Timer) -->
+    <vertical active='~is-draft-state' spacing='1.5' pad='2' align='Center'>
+        <text text='~match-pool-header' font-size='4.2' align='Center' color='#FF66AA'/>
+
+        <!-- TURN INDICATOR BANNER & 90s PICK TIMER -->
+        <text text='~draft-turn-text' font-size='5' align='Center'/>
+        <text text='~draft-timer-text' font-size='4' color='#FFCC00' align='Center'/>
+
+        <horizontal spacing='3' pref-height='44' align='Center'>
+            <!-- Card 1 -->
+            <vertical bg='round-rect-panel' pad='2' pref-width='34' spacing='1' align='Center'>
+                <image id='card1-img' pref-width='15' pref-height='15' preserve-aspect='true'/>
+                <text text='~card1-title' font-size='3' overflow-mode='Ellipsis' align='Center'/>
+                <text text='~card1-mapper' font-size='2.6' color='#888888' overflow-mode='Ellipsis' align='Center'/>
+                <text text='~card1-stars' font-size='3.6' color='#FFD700' align='Center'/>
+                <button text='~select-btn-text' interactable='~is-my-turn' on-click='pick-card-1' pref-width='24' pref-height='7'/>
+            </vertical>
+
+            <!-- Card 2 -->
+            <vertical bg='round-rect-panel' pad='2' pref-width='34' spacing='1' align='Center'>
+                <image id='card2-img' pref-width='15' pref-height='15' preserve-aspect='true'/>
+                <text text='~card2-title' font-size='3' overflow-mode='Ellipsis' align='Center'/>
+                <text text='~card2-mapper' font-size='2.6' color='#888888' overflow-mode='Ellipsis' align='Center'/>
+                <text text='~card2-stars' font-size='3.6' color='#FFD700' align='Center'/>
+                <button text='~select-btn-text' interactable='~is-my-turn' on-click='pick-card-2' pref-width='24' pref-height='7'/>
+            </vertical>
+
+            <!-- Card 3 -->
+            <vertical bg='round-rect-panel' pad='2' pref-width='34' spacing='1' align='Center'>
+                <image id='card3-img' pref-width='15' pref-height='15' preserve-aspect='true'/>
+                <text text='~card3-title' font-size='3' overflow-mode='Ellipsis' align='Center'/>
+                <text text='~card3-mapper' font-size='2.6' color='#888888' overflow-mode='Ellipsis' align='Center'/>
+                <text text='~card3-stars' font-size='3.6' color='#FFD700' align='Center'/>
+                <button text='~select-btn-text' interactable='~is-my-turn' on-click='pick-card-3' pref-width='24' pref-height='7'/>
+            </vertical>
+        </horizontal>
+
+        <button text='~reroll-btn-text' interactable='~can-reroll-and-turn' on-click='on-reroll-click' pref-width='38' pref-height='8'/>
+    </vertical>
+
+    <!-- STATE 1.5: 15s GET READY ROOM -->
+    <vertical active='~is-ready-state' spacing='2' pad='3' align='Center'>
+        <text text='MAP SELECTED - GET READY!' font-size='6' align='Center' color='#00FFCC'/>
+
+        <horizontal bg='round-rect-panel' pad='3' spacing='4' align='Center'>
+            <image id='ready-map-img' pref-width='20' pref-height='20' preserve-aspect='true'/>
+            <vertical spacing='1'>
+                <text text='~ready-map-title' font-size='4.5' overflow-mode='Ellipsis'/>
+                <text text='~ready-map-mapper' font-size='3.5' color='#AAAAAA'/>
+                <text text='~ready-map-stars' font-size='4' color='#FFD700'/>
+                <text text='~ready-status-text' font-size='3.8' color='#CCCCCC'/>
+            </vertical>
+        </horizontal>
+
+        <text text='~ready-timer-text' font-size='7' color='#FFCC00' align='Center'/>
+
+        <button text='~ready-btn-text' interactable='~can-click-ready' on-click='on-ready-click' pref-width='42' pref-height='10'/>
+    </vertical>
+
+    <!-- STATE 2: ANIMATED ROUND DAMAGE RESULTS (With 60s After-Map Timer) -->
+    <vertical active='~is-round-result-state' spacing='1.5' pad='3' align='Center'>
+        <text text='~round-result-header' font-size='5.5' align='Center' color='#FF4444'/>
+
+        <horizontal spacing='8' align='Center'>
+            <!-- YOU (LEFT) -->
+            <vertical bg='round-rect-panel' pad='3' pref-width='44' align='Center' spacing='1'>
+                <text text='YOU' font-size='4.5' color='#00FFCC' align='Center'/>
+                <image id='p1-img' pref-width='14' pref-height='14'/>
+                <text text='~p1-round-score' font-size='4' align='Center'/>
+                <text text='~p1-hp-bar' font-size='4.2' align='Center'/>
+                <text text='~p1-hp-text' font-size='4.5' align='Center'/>
+                <text text='~p1-damage-taken' font-size='4' color='#FF5555' align='Center'/>
+            </vertical>
+
+            <text text='VS' font-size='6' align='Center'/>
+
+            <!-- ENEMY (RIGHT) -->
+            <vertical bg='round-rect-panel' pad='3' pref-width='44' align='Center' spacing='1'>
+                <text text='~p2-name' font-size='4.5' color='#FF5555' align='Center'/>
+                <image id='p2-img' pref-width='14' pref-height='14'/>
+                <text text='~p2-round-score' font-size='4' align='Center'/>
+                <text text='~p2-hp-bar' font-size='4.2' align='Center'/>
+                <text text='~p2-hp-text' font-size='4.5' align='Center'/>
+                <text text='~p2-damage-taken' font-size='4' color='#FF5555' align='Center'/>
+            </vertical>
+        </horizontal>
+
+        <text text='~post-round-timer-text' active='~has-next-round-timer' font-size='3.8' color='#FFCC00' align='Center'/>
+        <button text='~continue-btn-text' interactable='~can-continue-round' on-click='on-continue-after-round' pref-width='42' pref-height='9'/>
+    </vertical>
+
+    <!-- STATE 3: POST-MATCH ELO SUMMARY -->
+    <vertical active='~is-match-over-state' spacing='3' pad='3' align='Center'>
+        <text text='~match-outcome-title' font-size='7.5' align='Center' color='#FFD700'/>
+
+        <horizontal bg='round-rect-panel' pad='3' spacing='5' align='Center'>
+            <image id='p2-over-img' pref-width='16' pref-height='16'/>
+            <vertical>
+                <text text='VS OPPONENT' font-size='3' color='#AAAAAA'/>
+                <text text='~p2-name' font-size='5'/>
+                <text text='~p2-final-elo' font-size='3.5' color='#CCCCCC'/>
+            </vertical>
+        </horizontal>
+
+        <text text='~elo-change-text' font-size='6.5' align='Center'/>
+        <text text='~new-total-elo-text' font-size='4' align='Center' color='#CCCCCC'/>
+
+        <button text='Back to Lobby' on-click='on-return-queue-click' pref-width='36' pref-height='9'/>
+    </vertical>
+</bg>
