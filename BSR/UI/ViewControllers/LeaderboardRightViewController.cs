@@ -1,8 +1,4 @@
-using System;
-using System.Linq;
-using System.Reflection;
 using BeatSaberMarkupLanguage.Attributes;
-using BeatSaberMarkupLanguage.ViewControllers;
 using BSR.Managers;
 using BSR.Services;
 using Newtonsoft.Json.Linq;
@@ -11,14 +7,8 @@ using Zenject;
 namespace BSR.UI.ViewControllers
 {
     [ViewDefinition("BSR.UI.Views.LeaderboardRightView.bsml")]
-    public class LeaderboardRightViewController : BSMLAutomaticViewController
+    public class LeaderboardRightViewController : RankedViewControllerBase
     {
-        private static readonly string[] AllUiProps = typeof(LeaderboardRightViewController)
-            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(p => Attribute.IsDefined(p, typeof(UIValue)))
-            .Select(p => p.Name)
-            .ToArray();
-
         [Inject] private readonly RankedMatchManager _match;
         [Inject] private readonly RankedNetworkClient _net;
 
@@ -136,11 +126,6 @@ namespace BSR.UI.ViewControllers
                 leftText = "<color=#555555>#--</color>";
                 rightText = "<color=#555555>---</color>";
             }
-        }
-
-        public void RefreshUI()
-        {
-            foreach (string prop in AllUiProps) NotifyPropertyChanged(prop);
         }
     }
 }

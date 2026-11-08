@@ -1,11 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.Attributes;
-using BeatSaberMarkupLanguage.ViewControllers;
 using BSR.Managers;
 using BSR.Services;
 using HMUI;
@@ -16,14 +13,8 @@ using Zenject;
 namespace BSR.UI.ViewControllers
 {
     [ViewDefinition("BSR.UI.Views.MainMatchView.bsml")]
-    public class MainMatchViewController : BSMLAutomaticViewController
+    public class MainMatchViewController : RankedViewControllerBase
     {
-        private static readonly string[] AllUiProps = typeof(MainMatchViewController)
-            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(p => Attribute.IsDefined(p, typeof(UIValue)))
-            .Select(p => p.Name)
-            .ToArray();
-
         [Inject] private readonly RankedMatchManager _match;
         [Inject] private readonly RankedNetworkClient _net;
         [Inject] private readonly ProfileLeftViewController _profileView;
@@ -140,11 +131,6 @@ namespace BSR.UI.ViewControllers
                 _net.OnPacketReceived -= HandleServerPacket;
             }
             base.OnDestroy();
-        }
-
-        private void RefreshUI()
-        {
-            foreach (string prop in AllUiProps) NotifyPropertyChanged(prop);
         }
 
         private void RefreshHpBars()

@@ -1,9 +1,5 @@
-using System;
-using System.Linq;
-using System.Reflection;
 using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.Attributes;
-using BeatSaberMarkupLanguage.ViewControllers;
 using BSR.Managers;
 using BSR.Services;
 using HMUI;
@@ -13,14 +9,8 @@ using Zenject;
 namespace BSR.UI.ViewControllers
 {
     [ViewDefinition("BSR.UI.Views.OpponentRightView.bsml")]
-    public class OpponentRightViewController : BSMLAutomaticViewController
+    public class OpponentRightViewController : RankedViewControllerBase
     {
-        private static readonly string[] AllUiProps = typeof(OpponentRightViewController)
-            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(p => Attribute.IsDefined(p, typeof(UIValue)))
-            .Select(p => p.Name)
-            .ToArray();
-
         [Inject] private readonly RankedMatchManager _match;
         [Inject] private readonly RankedNetworkClient _net;
 
@@ -39,6 +29,15 @@ namespace BSR.UI.ViewControllers
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
             if (firstActivation) _net.OnPacketReceived += HandlePacket;
             RefreshUI();
+        }
+
+        protected override void OnDestroy()
+        {
+            if (_net != null)
+            {
+                _net.OnPacketReceived -= HandlePacket;
+            }
+            base.OnDestroy();
         }
 
         public void SetOpponentData(JObject enemyData)
@@ -82,9 +81,9 @@ namespace BSR.UI.ViewControllers
             }
         }
 
-        public void RefreshUI()
+        public override void RefreshUI()
         {
-            foreach (string prop in AllUiProps) NotifyPropertyChanged(prop);
+            base.RefreshUI();
             if (_pfpImage != null && !string.IsNullOrEmpty(_match.EnemyPfp))
                 _pfpImage.SetImage(_match.EnemyPfp);
         }

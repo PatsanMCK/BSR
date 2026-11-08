@@ -1,9 +1,5 @@
-using System;
-using System.Linq;
-using System.Reflection;
 using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.Attributes;
-using BeatSaberMarkupLanguage.ViewControllers;
 using BS_Utils.Gameplay;
 using BSR.Managers;
 using BSR.Services;
@@ -14,14 +10,8 @@ using Zenject;
 namespace BSR.UI.ViewControllers
 {
     [ViewDefinition("BSR.UI.Views.ProfileLeftView.bsml")]
-    public class ProfileLeftViewController : BSMLAutomaticViewController
+    public class ProfileLeftViewController : RankedViewControllerBase
     {
-        private static readonly string[] AllUiProps = typeof(ProfileLeftViewController)
-            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(p => Attribute.IsDefined(p, typeof(UIValue)))
-            .Select(p => p.Name)
-            .ToArray();
-
         [Inject] private readonly RankedMatchManager _matchManager;
         [Inject] private readonly RankedApiService _apiService;
         [Inject] private readonly RankedNetworkClient _net;
@@ -79,9 +69,11 @@ namespace BSR.UI.ViewControllers
             if (type == "PROFILE_DATA" || type == "MATCH_OVER") RefreshProfileUI();
         }
 
-        public void RefreshProfileUI()
+        public void RefreshProfileUI() => RefreshUI();
+
+        public override void RefreshUI()
         {
-            foreach (string prop in AllUiProps) NotifyPropertyChanged(prop);
+            base.RefreshUI();
             if (_pfpImage != null && !string.IsNullOrEmpty(_matchManager.MyPfp))
                 _pfpImage.SetImage(_matchManager.MyPfp);
         }

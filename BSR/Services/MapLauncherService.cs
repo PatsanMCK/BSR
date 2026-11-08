@@ -82,12 +82,13 @@ namespace BSR.Services
                         if (!string.IsNullOrEmpty(parent) && !Directory.Exists(parent))
                             Directory.CreateDirectory(parent);
 
-                        entry.ExtractToFile(destinationPath, overwrite: true);
+                        using var entryStream = entry.Open();
+                        using var fileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None);
+                        await entryStream.CopyToAsync(fileStream);
                     }
                 }
 
                 // TournamentAssistant pattern: Refresh SongCore and wait for SongsLoadedEvent + BeatmapLevelsModel registration
-                var tcs = new TaskCompletionSource<bool>();
                 await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
                     Loader.Instance.RefreshSongs(false);

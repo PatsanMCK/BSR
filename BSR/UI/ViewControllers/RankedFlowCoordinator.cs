@@ -35,6 +35,15 @@ namespace BSR.UI
             }
         }
 
+        private void OnDestroy()
+        {
+            if (_mainMatchView != null)
+            {
+                _mainMatchView.OnMatchFoundEvent -= HandleMatchFound;
+                _mainMatchView.OnMatchConcludedEvent -= HandleMatchConcluded;
+            }
+        }
+
         private void HandleMatchFound(JObject matchData)
         {
             RankedMatchManager.IsInRankedMatch = true;

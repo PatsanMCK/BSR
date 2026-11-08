@@ -1,15 +1,16 @@
 {
   "$schema": "https://raw.githubusercontent.com/bsmg/BSIPA-MetadataFileSchema/master/Schema.json",
   "id": "BSR",
-  "name": "BeatSaberRanked",
+  "name": "BS Ranked",
   "author": "patsanmck",
-  "version": "1.0.0", 
+  "version": "1.0.0",
   "description": "osu!lazer style 1v1 Ranked Matchmaking for Beat Saber",
   "gameVersion": "1.40.8",
   "dependsOn": {
     "BSIPA": "^4.3.0",
     "SiraUtil": "^3.1.0",
     "BeatSaberMarkupLanguage": "^1.11.0",
-    "BS Utils": "^1.14.0"
+    "BS Utils": "^1.14.0",
+    "SongCore": "^3.12.0"
   }
 }

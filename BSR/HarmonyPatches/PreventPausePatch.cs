@@ -70,14 +70,14 @@ namespace BSR.HarmonyPatches
     }
 
     // =========================================================================
-    // 2. BLOCK CONTROLLER RESUME ONCE 10s PAUSE TIME IS EXHAUSTED
+    // 2. BLOCK CONTROLLER RESUME ONCE PAUSE TIME IS EXHAUSTED
     // =========================================================================
     [HarmonyPatch(typeof(PauseMenuManager), "ContinueButtonPressed")]
     public class BlockContinueButtonPatch
     {
         private static bool Prefix()
         {
-            // If the 10s pause allowance is used up during a ranked match, disallow resuming!
+            // If the pause allowance is used up during a ranked match, disallow resuming!
             if (RankedMatchManager.IsInRankedMatch && PreventPausePatch.RemainingPauseTime <= 0f)
             {
                 return false;
@@ -100,7 +100,7 @@ namespace BSR.HarmonyPatches
     }
 
     // =========================================================================
-    // 3. ANTI-STALL PAUSE MENU (Restart hidden, 10s timer removes Continue button)
+    // 3. ANTI-STALL PAUSE MENU (Restart hidden, timer removes Continue button)
     // =========================================================================
     [HarmonyPatch(typeof(PauseMenuManager), nameof(PauseMenuManager.ShowMenu))]
     public class PreventPausePatch
@@ -139,7 +139,7 @@ namespace BSR.HarmonyPatches
                     return;
                 }
 
-                // Reset the 10-second pause allowance whenever a new map starts
+                // Reset the pause allowance whenever a new map starts
                 if (_currentMapPauseManager != __instance)
                 {
                     _currentMapPauseManager = __instance;
@@ -170,7 +170,7 @@ namespace BSR.HarmonyPatches
             var continueText = continueButton != null ? continueButton.GetComponentInChildren<TextMeshProUGUI>(true) : null;
             string originalContinueLabel = continueText != null ? continueText.text : "CONTINUE";
 
-            // PHASE 1: Count down the 10 seconds of allowed pause time
+            // PHASE 1: Count down the allowed pause time
             if (_remainingPauseTime > 0f)
             {
                 if (continueButton != null)
@@ -217,9 +217,9 @@ namespace BSR.HarmonyPatches
                 restartButton.transform.localScale = Vector3.zero;
             }
 
-            Plugin.Log.Info("[BS Ranked] 10s pause time expired -> Removed Continue button. Only Forfeit is available!");
+            Plugin.Log.Info($"[BS Ranked] {MaxPauseSecondsPerMap}s pause time expired -> Removed Continue button. Only Forfeit is available!");
 
-            // PHASE 3: Stall protection (if the player leaves their headset on the floor, auto-forfeit after 30s)
+            // PHASE 3: Stall protection (if the player leaves their headset on the floor, auto-forfeit after timeout)
             float stallTimer = AutoForfeitStallTimeout;
             while (pauseMenu != null && pauseMenu.enabled && stallTimer > 0f)
             {
@@ -234,7 +234,7 @@ namespace BSR.HarmonyPatches
                 yield return null;
             }
 
-            // If 30 seconds of pure stalling pass without clicking Forfeit, trigger forfeit
+            // If stall timeout passes without clicking Forfeit, trigger forfeit
             if (pauseMenu != null && pauseMenu.enabled && stallTimer <= 0f)
             {
                 Plugin.Log.Warn("[BS Ranked] Player stalled in pause menu without clicking Forfeit -> Auto-forfeiting!");
