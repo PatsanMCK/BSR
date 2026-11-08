@@ -22,33 +22,25 @@ namespace BSR.UI.ViewControllers
         [Inject] private readonly RankedMatchManager _match;
         [Inject] private readonly RankedNetworkClient _net;
 
-        [UIValue("row1-left")] public string Row1Left { get; set; } = "<color=#FFD700>#1</color>";
+        // Top #1 Champion Row
+        [UIValue("top1-left")] public string Top1Left { get; set; } = "<color=#FFD700>#1</color>";
+        [UIValue("top1-right")] public string Top1Right { get; set; } = "<color=#888888>---</color>";
+
+        // 5 Neighborhood Rows (2 Above, You, 2 Below)
+        [UIValue("row1-left")] public string Row1Left { get; set; } = "";
         [UIValue("row1-right")] public string Row1Right { get; set; } = "<color=#888888>---</color>";
 
-        [UIValue("row2-left")] public string Row2Left { get; set; } = "<color=#C0C0C0>#2</color>";
+        [UIValue("row2-left")] public string Row2Left { get; set; } = "";
         [UIValue("row2-right")] public string Row2Right { get; set; } = "<color=#888888>---</color>";
 
-        [UIValue("row3-left")] public string Row3Left { get; set; } = "<color=#CD7F32>#3</color>";
+        [UIValue("row3-left")] public string Row3Left { get; set; } = "";
         [UIValue("row3-right")] public string Row3Right { get; set; } = "<color=#888888>---</color>";
 
-        [UIValue("row4-left")] public string Row4Left { get; set; } = "#4";
+        [UIValue("row4-left")] public string Row4Left { get; set; } = "";
         [UIValue("row4-right")] public string Row4Right { get; set; } = "<color=#888888>---</color>";
 
-        [UIValue("row5-left")] public string Row5Left { get; set; } = "#5";
+        [UIValue("row5-left")] public string Row5Left { get; set; } = "";
         [UIValue("row5-right")] public string Row5Right { get; set; } = "<color=#888888>---</color>";
-
-        [UIValue("me-left")]
-        public string MeLeft
-        {
-            get
-            {
-                var d = _match.GetRankDetails(_match.MyElo);
-                return $"<b>#{_match.MyLeaderboardRank}</b>  <color={d.colorHex}>[{d.tier}]</color>";
-            }
-        }
-
-        [UIValue("me-right")]
-        public string MeRight => $"{_match.MyName}  <color=#00FFCC>({_match.MyElo} ELO)</color>";
 
         protected override async void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
@@ -82,39 +74,67 @@ namespace BSR.UI.ViewControllers
             }
             else if (type == "LEADERBOARD_DATA" && data != null)
             {
-                if (data["me"] is JObject me)
+                // 1. Format #1 Global Champion
+                if (data["topOne"] is JObject top1)
                 {
-                    _match.MyLeaderboardRank = (int?)me["leaderboardRank"] ?? _match.MyLeaderboardRank;
-                    _match.MyElo = (int?)me["elo"] ?? _match.MyElo;
+                    string name = top1["name"]?.ToString() ?? "Player";
+                    int elo = (int?)top1["elo"] ?? 1000;
+                    bool isMe = (bool?)top1["isMe"] ?? false;
+                    var d = _match.GetRankDetails(elo);
+
+                    Top1Left = isMe
+                        ? $"<color=#00FFCC><b>#1</b> [{d.tier}]</color>"
+                        : $"<color=#FFD700><b>#1</b></color>  <color={d.colorHex}>[{d.tier}]</color>";
+
+                    Top1Right = isMe
+                        ? $"<color=#00FFCC><b>{name}</b> ({elo} ELO)</color>"
+                        : $"{name} <color=#AAAAAA>({elo} ELO)</color>";
+                }
+                else
+                {
+                    Top1Left = "<color=#FFD700>#1</color>";
+                    Top1Right = "<color=#888888>---</color>";
                 }
 
-                var top = data["topPlayers"] as JArray;
-                FormatRow(0, top, "#FFD700", out string l1, out string r1); Row1Left = l1; Row1Right = r1;
-                FormatRow(1, top, "#C0C0C0", out string l2, out string r2); Row2Left = l2; Row2Right = r2;
-                FormatRow(2, top, "#CD7F32", out string l3, out string r3); Row3Left = l3; Row3Right = r3;
-                FormatRow(3, top, "#CCCCCC", out string l4, out string r4); Row4Left = l4; Row4Right = r4;
-                FormatRow(4, top, "#CCCCCC", out string l5, out string r5); Row5Left = l5; Row5Right = r5;
+                // 2. Format 5 Neighborhood Rows (2 above, you, 2 below)
+                var neighborhood = data["neighborhood"] as JArray;
+
+                FormatNeighborhoodRow(0, neighborhood, out string l1, out string r1); Row1Left = l1; Row1Right = r1;
+                FormatNeighborhoodRow(1, neighborhood, out string l2, out string r2); Row2Left = l2; Row2Right = r2;
+                FormatNeighborhoodRow(2, neighborhood, out string l3, out string r3); Row3Left = l3; Row3Right = r3;
+                FormatNeighborhoodRow(3, neighborhood, out string l4, out string r4); Row4Left = l4; Row4Right = r4;
+                FormatNeighborhoodRow(4, neighborhood, out string l5, out string r5); Row5Left = l5; Row5Right = r5;
 
                 RefreshUI();
             }
         }
 
-        private void FormatRow(int index, JArray top, string rankColor, out string leftText, out string rightText)
+        private void FormatNeighborhoodRow(int index, JArray list, out string leftText, out string rightText)
         {
-            int rankNum = index + 1;
-            if (top != null && index < top.Count && top[index] is JObject p)
+            if (list != null && index < list.Count && list[index] is JObject p)
             {
+                int rank = (int?)p["rank"] ?? (index + 1);
                 string name = p["name"]?.ToString() ?? "Player";
                 int elo = (int?)p["elo"] ?? 1000;
+                bool isMe = (bool?)p["isMe"] ?? false;
                 var tierDetails = _match.GetRankDetails(elo);
 
-                leftText = $"<color={rankColor}><b>#{rankNum}</b></color>  <color={tierDetails.colorHex}>[{tierDetails.tier}]</color>";
-                rightText = $"{name} <color=#AAAAAA>({elo})</color>";
+                if (isMe)
+                {
+                    // Highlight YOU in bright cyan!
+                    leftText = $"<color=#00FFCC><b>#{rank}</b>  [{tierDetails.tier}]</color>";
+                    rightText = $"<color=#00FFCC><b>{name}</b> ({elo})</color>";
+                }
+                else
+                {
+                    leftText = $"<b>#{rank}</b>  <color={tierDetails.colorHex}>[{tierDetails.tier}]</color>";
+                    rightText = $"{name} <color=#AAAAAA>({elo})</color>";
+                }
             }
             else
             {
-                leftText = $"<color={rankColor}>#{rankNum}</color>";
-                rightText = "<color=#666666>---</color>";
+                leftText = "<color=#555555>#--</color>";
+                rightText = "<color=#555555>---</color>";
             }
         }
 

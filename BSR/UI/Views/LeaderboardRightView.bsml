@@ -2,33 +2,38 @@
     <vertical spacing='1.5' pad='3' align='Center'>
         <text text='LEADERBOARD' font-size='5.2' align='Center' color='#FFFFFF'/>
 
-        <!-- TOP 1 TO 5 PANEL -->
-        <vertical bg='round-rect-panel' pad='3' pref-width='72' spacing='1.2'>
+        <!-- #1 GLOBAL CHAMPION CARD -->
+        <text text='RANK #1' font-size='3.1' color='#FFD700' align='Center'/>
+        <horizontal bg='round-rect-panel' pad='2' pref-width='72' align='Center'>
+            <text text='~top1-left' font-size='3.8' align='Left'/>
+            <text text='~top1-right' font-size='3.8' overflow-mode='Ellipsis' align='Right'/>
+        </horizontal>
+
+        <!-- YOUR STANDING (2 ON TOP, YOU, 2 BELOW) -->
+        <text text='YOUR STANDING' font-size='3.1' color='#00FFCC' align='Center'/>
+        <vertical bg='round-rect-panel' pad='2' pref-width='72' spacing='1.2'>
             <horizontal pref-width='66'>
-                <text text='~row1-left' font-size='3.6' align='Left'/>
-                <text text='~row1-right' font-size='3.6' overflow-mode='Ellipsis' align='Right'/>
+                <text text='~row1-left' font-size='3.4' align='Left'/>
+                <text text='~row1-right' font-size='3.4' overflow-mode='Ellipsis' align='Right'/>
             </horizontal>
             <horizontal pref-width='66'>
-                <text text='~row2-left' font-size='3.6' align='Left'/>
-                <text text='~row2-right' font-size='3.6' overflow-mode='Ellipsis' align='Right'/>
+                <text text='~row2-left' font-size='3.4' align='Left'/>
+                <text text='~row2-right' font-size='3.4' overflow-mode='Ellipsis' align='Right'/>
             </horizontal>
             <horizontal pref-width='66'>
-                <text text='~row3-left' font-size='3.6' align='Left'/>
-                <text text='~row3-right' font-size='3.6' overflow-mode='Ellipsis' align='Right'/>
+                <text text='~row3-left' font-size='3.4' align='Left'/>
+                <text text='~row3-right' font-size='3.4' overflow-mode='Ellipsis' align='Right'/>
             </horizontal>
             <horizontal pref-width='66'>
-                <text text='~row4-left' font-size='3.6' align='Left'/>
-                <text text='~row4-right' font-size='3.6' overflow-mode='Ellipsis' align='Right'/>
+                <text text='~row4-left' font-size='3.4' align='Left'/>
+                <text text='~row4-right' font-size='3.4' overflow-mode='Ellipsis' align='Right'/>
             </horizontal>
             <horizontal pref-width='66'>
-                <text text='~row5-left' font-size='3.6' align='Left'/>
-                <text text='~row5-right' font-size='3.6' overflow-mode='Ellipsis' align='Right'/>
-            </horizontal>
-            <horizontal pref-width='66'>
-                <text text='~me-left' font-size='3.6' color='#00FFCC' align='Left'/>
-                <text text='~me-right' font-size='3.6' color='#FFFFFF' overflow-mode='Ellipsis' align='Right'/>
+                <text text='~row5-left' font-size='3.4' align='Left'/>
+                <text text='~row5-right' font-size='3.4' overflow-mode='Ellipsis' align='Right'/>
             </horizontal>
         </vertical>
+
         <button text='Refresh' on-click='on-refresh-click' pref-width='26' pref-height='7'/>
     </vertical>
 </bg>
