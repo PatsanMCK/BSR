@@ -27,6 +27,16 @@
             </vertical>
 
         </horizontal>
+
+        <!-- SCORE SUBMISSION TOGGLE -->
+        <horizontal bg='round-rect-panel' pad='2' pref-width='79' align='Center'>
+            <toggle-setting text='Submit Scores (ScoreSaber / BeatLeader)'
+                            value='enable-score-submission'
+                            apply-on-change='true'
+                            bind-value='true'
+                            font-size='3.2'
+                            hover-hint='When enabled, scores achieved during ranked matches will also be submitted to ScoreSaber and BeatLeader.'/>
+        </horizontal>
     </vertical>
 
     <!-- TETR.IO RANK EXPLANATION MODAL -->

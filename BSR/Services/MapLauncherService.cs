@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using BS_Utils.Gameplay;
+using BSR.Configuration;
 using IPA.Utilities;
 using IPA.Utilities.Async;
 using SongCore;
@@ -157,6 +158,7 @@ namespace BSR.Services
                     if (!targetKey.IsValid()) targetKey = keys.LastOrDefault();
 
                     var playerData = _playerDataModel.playerData;
+                    bool submitScores = PluginConfig.Instance?.EnableScoreSubmission ?? false;
 
                     // TournamentAssistant pattern: Use explicit 15-parameter constructor instead of .CopyWith()
                     // Prevents 1.40.8 -> 1.39.1 optional parameter shift from turning on Zen Mode (0 notes)!
@@ -182,9 +184,13 @@ namespace BSR.Services
 
                     IsCurrentlyInGameplay = true;
                     _wasPulledOutByServer = false;
-                    ScoreSubmission.DisableSubmission("BS Ranked");
 
-                    Plugin.Log.Info($"[BS Ranked] Launching '{beatmapLevel.songName}' [{targetKey.difficulty}] (ZenMode={modifiers.zenMode}, NoFail={modifiers.noFailOn0Energy})");
+                    if (!submitScores)
+                    {
+                        ScoreSubmission.DisableSubmission("BS Ranked");
+                    }
+
+                    Plugin.Log.Info($"[BS Ranked] Launching '{beatmapLevel.songName}' [{targetKey.difficulty}] (SubmitScores={submitScores}, NoFail={modifiers.noFailOn0Energy})");
 
                     LaunchStandardLevelClean(targetKey, beatmapLevel, beatmapLevelData, playerData, modifiers, playerColorScheme,
                         (_, results) =>

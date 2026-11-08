@@ -1,6 +1,7 @@
 using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.Attributes;
 using BS_Utils.Gameplay;
+using BSR.Configuration;
 using BSR.Managers;
 using BSR.Services;
 using HMUI;
@@ -24,6 +25,20 @@ namespace BSR.UI.ViewControllers
         [UIValue("elo-clickable-text")] public string EloClickableText => $"<b>{_matchManager.MyElo}</b> ELO";
         [UIValue("avg-stars-text")] public string AvgStarsText => $"Top Page Avg: {_matchManager.MyAvgStars:F2} ★";
         [UIValue("record-text")] public string RecordText => $"Record: {_matchManager.MyWins}W / {_matchManager.MyLosses}L";
+
+        [UIValue("enable-score-submission")]
+        public bool EnableScoreSubmission
+        {
+            get => PluginConfig.Instance?.EnableScoreSubmission ?? false;
+            set
+            {
+                if (PluginConfig.Instance != null)
+                {
+                    PluginConfig.Instance.EnableScoreSubmission = value;
+                }
+                NotifyPropertyChanged();
+            }
+        }
 
         protected override async void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
