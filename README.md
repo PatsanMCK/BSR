@@ -1,6 +1,6 @@
 # BSR (Beat Saber Ranked)
 > [!WARNING]  
-> Before you continue: Unfortunately this mod is vibe-coded.
+> Before you continue: Unfortunately this mod is vibe-coded. Gemini Argon 4 and Flash 3.8 were used in the making.
 > 
 > With that said, this mod went through thorough testing and had it's code reviewed by a human being. If you are ok with that, carry on.
 
