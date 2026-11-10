@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <Import Project="BSR.csproj.user" Condition="Exists('BSR.csproj.user')"/>
 
@@ -42,6 +42,10 @@
         </Reference>
         <Reference Include="BeatSaber.ViewSystem">
             <HintPath>$(BeatSaberDir)/Beat Saber_Data/Managed/BeatSaber.ViewSystem.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="BGLib.UnityExtension">
+            <HintPath>$(BeatSaberDir)/Beat Saber_Data/Managed/BGLib.UnityExtension.dll</HintPath>
             <Private>false</Private>
         </Reference>
         <Reference Include="BS_Utils">
@@ -159,7 +163,6 @@
         <EmbeddedResource Include="UI\Views\MainMatchView.bsml" />
         <None Remove="UI\Views\ProfileLeftView.bsml" />
         <EmbeddedResource Include="UI\Views\ProfileLeftView.bsml" />
-        <None Remove="UI\Views\QueueRightView.bsml" />
         <None Remove="UI\Views\OpponentRightView.bsml" />
         <EmbeddedResource Include="UI\Views\OpponentRightView.bsml" />
         <None Remove="UI\Views\LeaderboardRightView.bsml" />

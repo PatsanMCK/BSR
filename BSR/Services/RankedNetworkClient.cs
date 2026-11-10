@@ -61,7 +61,6 @@ namespace BSR.Services
                 if (userInfo != null && !string.IsNullOrEmpty(userInfo.platformUserId))
                 {
                     _matchManager.MySteamId = userInfo.platformUserId;
-                    _matchManager.MySteamId = userInfo.platformUserId;
                     _matchManager.MyName = userInfo.userName ?? "Player";
                 }
                 Plugin.Log.Info($"[BS Ranked] Authenticating with SteamID: {_matchManager.MySteamId}");
@@ -109,7 +108,7 @@ namespace BSR.Services
             var buffer = new byte[8192];
             try
             {
-                while (_ws.State == WebSocketState.Open && !token.IsCancellationRequested)
+                while (_ws != null && _ws.State == WebSocketState.Open && !token.IsCancellationRequested)
                 {
                     using var ms = new MemoryStream();
                     WebSocketReceiveResult result;
@@ -123,27 +122,34 @@ namespace BSR.Services
                     }
                     while (!result.EndOfMessage);
 
-                    string json = Encoding.UTF8.GetString(ms.ToArray());
-                    var msg = JObject.Parse(json);
-                    string type = msg["type"]?.ToString();
-                    var data = msg["data"] as JObject;
-
-                    if (type == "PROFILE_DATA" && data != null)
+                    try
                     {
-                        _matchManager.MyName = data["name"]?.ToString() ?? _matchManager.MyName;
-                        _matchManager.MyPfp = data["pfp"]?.ToString() ?? _matchManager.MyPfp;
-                        _matchManager.MyElo = (int?)data["elo"] ?? _matchManager.MyElo;
-                        _matchManager.MyAvgStars = (double?)data["avgStars"] ?? _matchManager.MyAvgStars;
-                        _matchManager.MyLeaderboardRank = (int?)data["leaderboardRank"] ?? _matchManager.MyLeaderboardRank;
-                        _matchManager.MyWins = (int?)data["wins"] ?? _matchManager.MyWins;
-                        _matchManager.MyLosses = (int?)data["losses"] ?? _matchManager.MyLosses;
-                        Plugin.Log.Info($"[BS Ranked] Loaded Server Profile: {_matchManager.MyName} | #{_matchManager.MyLeaderboardRank} | ELO: {_matchManager.MyElo}");
+                        string json = Encoding.UTF8.GetString(ms.ToArray());
+                        var msg = JObject.Parse(json);
+                        string type = msg["type"]?.ToString();
+                        var data = msg["data"] as JObject;
+
+                        if (type == "PROFILE_DATA" && data != null)
+                        {
+                            _matchManager.MyName = data["name"]?.ToString() ?? _matchManager.MyName;
+                            _matchManager.MyPfp = data["pfp"]?.ToString() ?? _matchManager.MyPfp;
+                            _matchManager.MyElo = (int?)data["elo"] ?? _matchManager.MyElo;
+                            _matchManager.MyAvgStars = (double?)data["avgStars"] ?? _matchManager.MyAvgStars;
+                            _matchManager.MyLeaderboardRank = (int?)data["leaderboardRank"] ?? _matchManager.MyLeaderboardRank;
+                            _matchManager.MyWins = (int?)data["wins"] ?? _matchManager.MyWins;
+                            _matchManager.MyLosses = (int?)data["losses"] ?? _matchManager.MyLosses;
+                            Plugin.Log.Info($"[BS Ranked] Loaded Server Profile: {_matchManager.MyName} | #{_matchManager.MyLeaderboardRank} | ELO: {_matchManager.MyElo}");
+                        }
+
+                        _ = UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                        {
+                            OnPacketReceived?.Invoke(type, data);
+                        });
                     }
-
-                    _ = UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                    catch (Exception ex)
                     {
-                        OnPacketReceived?.Invoke(type, data);
-                    });
+                        Plugin.Log.Warn($"[BS Ranked] Error parsing packet: {ex.Message}");
+                    }
                 }
             }
             catch (Exception ex) when (!(ex is OperationCanceledException))

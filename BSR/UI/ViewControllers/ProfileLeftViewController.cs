@@ -49,24 +49,31 @@ namespace BSR.UI.ViewControllers
 
             RefreshProfileUI();
 
-            var userInfo = await GetUserInfo.GetUserAsync();
-            if (userInfo != null && !string.IsNullOrEmpty(userInfo.platformUserId))
+            try
             {
-                _matchManager.MySteamId = userInfo.platformUserId;
-                _matchManager.MyName = userInfo.userName ?? "Player";
-            }
+                var userInfo = await GetUserInfo.GetUserAsync();
+                if (userInfo != null && !string.IsNullOrEmpty(userInfo.platformUserId))
+                {
+                    _matchManager.MySteamId = userInfo.platformUserId;
+                    _matchManager.MyName = userInfo.userName ?? "Player";
+                }
 
-            if (_net.IsConnected)
-            {
-                await _net.SendPacketAsync("AUTH", new { steamId = _matchManager.MySteamId });
+                if (_net.IsConnected)
+                {
+                    await _net.SendPacketAsync("AUTH", new { steamId = _matchManager.MySteamId });
+                }
+                else if (firstActivation)
+                {
+                    var stats = await _apiService.GetScoreSaberStatsAsync(_matchManager.MySteamId);
+                    _matchManager.MyName = stats.name;
+                    _matchManager.MyPfp = stats.avatarUrl;
+                    _matchManager.MyAvgStars = stats.avgStars;
+                    RefreshProfileUI();
+                }
             }
-            else if (firstActivation)
+            catch (System.Exception ex)
             {
-                var stats = await _apiService.GetScoreSaberStatsAsync(_matchManager.MySteamId);
-                _matchManager.MyName = stats.name;
-                _matchManager.MyPfp = stats.avatarUrl;
-                _matchManager.MyAvgStars = stats.avgStars;
-                RefreshProfileUI();
+                Plugin.Log.Warn($"[BS Ranked] Error during ProfileLeftViewController DidActivate: {ex.Message}");
             }
         }
 

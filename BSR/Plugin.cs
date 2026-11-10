@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Reflection;
 using System.Threading.Tasks;
 using BS_Utils.Gameplay;
@@ -33,18 +33,18 @@ namespace BSR
             PluginConfig.Instance = config.Generated<PluginConfig>();
             _harmony = new Harmony("com.patsanmck.bsr");
 
-            // 1. App Container
+            // 1. App Container (Persists across Menu and Gameplay)
             zenjector.Install(Location.App, container =>
             {
                 container.Bind<RankedApiService>().AsSingle();
                 container.Bind<RankedMatchManager>().AsSingle();
-            });
-
-            // 2. Menu Container
-            zenjector.Install(Location.Menu, container =>
-            {
                 container.BindInterfacesAndSelfTo<RankedNetworkClient>().AsSingle();
                 container.Bind<MapLauncherService>().AsSingle();
+            });
+
+            // 2. Menu Container (Scoped to Main Menu scene)
+            zenjector.Install(Location.Menu, container =>
+            {
                 container.Bind<ProfileLeftViewController>().FromNewComponentAsViewController().AsSingle();
                 container.Bind<LeaderboardRightViewController>().FromNewComponentAsViewController().AsSingle();
                 container.Bind<OpponentRightViewController>().FromNewComponentAsViewController().AsSingle();

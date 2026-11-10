@@ -117,9 +117,26 @@ namespace BSR.UI.ViewControllers
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
             if (firstActivation)
             {
+                _net.OnConnectionStatusChanged -= HandleConnectionChanged;
                 _net.OnConnectionStatusChanged += HandleConnectionChanged;
+                _net.OnPacketReceived -= HandleServerPacket;
                 _net.OnPacketReceived += HandleServerPacket;
             }
+
+            if (RankedMatchManager.IsInRankedMatch)
+            {
+                _displayedP1Hp = _match.MyHp;
+                _displayedP2Hp = _match.EnemyHp;
+                if (!IsDraftState && !IsReadyState && !IsRoundResultState && !IsMatchOverState)
+                {
+                    SetState(waiting: true);
+                }
+            }
+            else if (!IsDraftState && !IsReadyState && !IsWaitingState && !IsRoundResultState && !IsMatchOverState)
+            {
+                SetState(idle: true);
+            }
+
             HandleConnectionChanged(_net.IsConnected);
         }
 
@@ -196,130 +213,137 @@ namespace BSR.UI.ViewControllers
 
         private async void HandleServerPacket(string type, JObject data)
         {
-            switch (type)
+            try
             {
-                case "QUEUE_STATUS":
-                    _playersInQueue = (int?)data?["count"] ?? 0;
-                    RefreshUI();
-                    break;
+                switch (type)
+                {
+                    case "QUEUE_STATUS":
+                        _playersInQueue = (int?)data?["count"] ?? 0;
+                        RefreshUI();
+                        break;
 
-                case "MATCH_FOUND":
-                    _isQueueing = false;
-                    QueueBtnText = "FIND MATCH";
-                    OnMatchFoundEvent?.Invoke(data);
-                    break;
+                    case "MATCH_FOUND":
+                        _isQueueing = false;
+                        QueueBtnText = "FIND MATCH";
+                        OnMatchFoundEvent?.Invoke(data);
+                        break;
 
-                case "START_DRAFT":
-                    _canReroll = true;
-                    RerollBtnText = "Reroll Hand";
-                    _currentRound = (int?)data["roundNumber"] ?? (_currentRound + 1);
-                    _currentMultiplier = (int?)data["multiplier"] ?? 1;
-                    _pickerName = data["pickerName"]?.ToString() ?? "Opponent";
-                    IsMyTurn = (bool?)data["isMyTurn"] ?? false;
-                    DraftTimerText = $"Pick Time Left: {(int?)data["timeLeft"] ?? 90}s";
-                    ApplyCardsFromServer(data["cards"] as JArray);
-                    SetState(draft: true);
-                    break;
+                    case "START_DRAFT":
+                        _canReroll = true;
+                        RerollBtnText = "Reroll Hand";
+                        _currentRound = (int?)data["roundNumber"] ?? (_currentRound + 1);
+                        _currentMultiplier = (int?)data["multiplier"] ?? 1;
+                        _pickerName = data["pickerName"]?.ToString() ?? "Opponent";
+                        IsMyTurn = (bool?)data["isMyTurn"] ?? false;
+                        DraftTimerText = $"Pick Time Left: {(int?)data["timeLeft"] ?? 90}s";
+                        ApplyCardsFromServer(data["cards"] as JArray);
+                        SetState(draft: true);
+                        break;
 
-                case "DRAFT_TICK":
-                    int draftSec = (int?)data["timeLeft"] ?? 0;
-                    DraftTimerText = draftSec <= 15
-                        ? $"<color=#FF4444>Pick Time Left: {draftSec}s </color>"
-                        : $"Pick Time Left: {draftSec}s";
-                    NotifyPropertyChanged(nameof(DraftTimerText));
-                    break;
+                    case "DRAFT_TICK":
+                        int draftSec = (int?)data["timeLeft"] ?? 0;
+                        DraftTimerText = draftSec <= 15
+                            ? $"<color=#FF4444>Pick Time Left: {draftSec}s </color>"
+                            : $"Pick Time Left: {draftSec}s";
+                        NotifyPropertyChanged(nameof(DraftTimerText));
+                        break;
 
-                case "MAP_LOCKED":
-                    var map = data["map"];
-                    string hash = map["Hash"]?.ToString();
-                    ReadyMapTitle = map["Title"]?.ToString() ?? "Ranked Map";
-                    ReadyMapMapper = $"Mapped by: {map["Mapper"] ?? "Unknown Mapper"}";
-                    ReadyMapStars = $"{(double?)map["Stars"] ?? 0.0:F2} ★ ({map["Difficulty"] ?? "ExpertPlus"})";
-                    ReadyTimerText = "Downloading Map...";
-                    ReadyStatusText = "Installing map locally...";
-                    CanClickReady = false;
-                    ReadyBtnText = "Installing Map...";
-                    _readyMapImg?.SetImage(map["CoverUrl"]?.ToString() ?? "");
-                    SetState(ready: true);
+                    case "MAP_LOCKED":
+                        var map = data["map"];
+                        string hash = map["Hash"]?.ToString() ?? map["hash"]?.ToString();
+                        ReadyMapTitle = map["Title"]?.ToString() ?? map["title"]?.ToString() ?? "Ranked Map";
+                        ReadyMapMapper = $"Mapped by: {map["Mapper"] ?? map["mapper"] ?? "Unknown Mapper"}";
+                        ReadyMapStars = $"{(double?)(map["Stars"] ?? map["stars"]) ?? 0.0:F2} ★ ({map["Difficulty"] ?? map["difficulty"] ?? "ExpertPlus"})";
+                        ReadyTimerText = "Downloading Map...";
+                        ReadyStatusText = "Installing map locally...";
+                        CanClickReady = false;
+                        ReadyBtnText = "Installing Map...";
+                        _readyMapImg?.SetImage(map["CoverUrl"]?.ToString() ?? map["coverUrl"]?.ToString() ?? "");
+                        SetState(ready: true);
 
-                    await _mapLauncher.EnsureMapDownloadedAsync(hash, ReadyMapTitle, map["DownloadUrl"]?.ToString());
-                    ReadyStatusText = "Waiting for opponent to finish downloading...";
-                    ReadyBtnText = "Waiting for Opponent...";
-                    RefreshUI();
-                    await _net.SendPacketAsync("MAP_DOWNLOADED");
-                    break;
+                        await _mapLauncher.EnsureMapDownloadedAsync(hash, ReadyMapTitle, map["DownloadUrl"]?.ToString() ?? map["downloadUrl"]?.ToString());
+                        ReadyStatusText = "Waiting for opponent to finish downloading...";
+                        ReadyBtnText = "Waiting for Opponent...";
+                        RefreshUI();
+                        await _net.SendPacketAsync("MAP_DOWNLOADED");
+                        break;
 
-                case "DOWNLOADS_COMPLETE":
-                    ReadyTimerText = $"Starting in {(int?)data["timeLeft"] ?? 15}s";
-                    ReadyStatusText = "Both players have the map! (0 / 2 Ready)";
-                    CanClickReady = true;
-                    ReadyBtnText = "READY!";
-                    RefreshUI();
-                    break;
+                    case "DOWNLOADS_COMPLETE":
+                        ReadyTimerText = $"Starting in {(int?)data["timeLeft"] ?? 15}s";
+                        ReadyStatusText = "Both players have the map! (0 / 2 Ready)";
+                        CanClickReady = true;
+                        ReadyBtnText = "READY!";
+                        RefreshUI();
+                        break;
 
-                case "READY_TICK":
-                    ReadyTimerText = $"Starting in {(int?)data["timeLeft"] ?? 0}s";
-                    ReadyStatusText = $"Players Ready: {(int?)data["readyCount"] ?? 0} / 2";
-                    RefreshUI();
-                    break;
+                    case "READY_TICK":
+                        ReadyTimerText = $"Starting in {(int?)data["timeLeft"] ?? 0}s";
+                        ReadyStatusText = $"Players Ready: {(int?)data["readyCount"] ?? 0} / 2";
+                        RefreshUI();
+                        break;
 
-                case "START_MAP":
-                    _ = _mapLauncher.DownloadAndStartMapAsync(
-                        data["Hash"]?.ToString(),
-                        data["Title"]?.ToString() ?? "Ranked Map",
-                        data["DownloadUrl"]?.ToString(),
-                        data["Difficulty"]?.ToString() ?? "ExpertPlus",
-                        data["Characteristic"]?.ToString() ?? "Standard",
-                        myScore =>
+                    case "START_MAP":
+                        _ = _mapLauncher.DownloadAndStartMapAsync(
+                            data["Hash"]?.ToString() ?? data["hash"]?.ToString(),
+                            data["Title"]?.ToString() ?? data["title"]?.ToString() ?? "Ranked Map",
+                            data["DownloadUrl"]?.ToString() ?? data["downloadUrl"]?.ToString(),
+                            data["Difficulty"]?.ToString() ?? data["difficulty"]?.ToString() ?? "ExpertPlus",
+                            data["Characteristic"]?.ToString() ?? data["characteristic"]?.ToString() ?? "Standard",
+                            myScore =>
+                            {
+                                WaitingMyScore = $"Your Score: {myScore:N0}";
+                                SetState(waiting: true);
+                                _ = _net.SendPacketAsync("SUBMIT_SCORE", new { score = myScore });
+                            },
+                            () => _ = _net.SendPacketAsync("FORFEIT_MATCH"));
+                        break;
+
+                    case "CARDS_DEALT":
+                        ApplyCardsFromServer(data["cards"] as JArray);
+                        break;
+
+                    case "ROUND_RESULT":
+                        _currentRound = (int?)data["roundNumber"] ?? _currentRound;
+                        _currentMultiplier = (int?)data["multiplier"] ?? _currentMultiplier;
+                        int oldP1 = _match.MyHp, oldP2 = _match.EnemyHp;
+                        _match.MyHp = (int?)data["myHp"] ?? RankedMatchManager.MaxHp;
+                        _match.EnemyHp = (int?)data["enemyHp"] ?? RankedMatchManager.MaxHp;
+
+                        PostRoundTimerText = $"Next Round in {(int?)data["timeLeft"] ?? 60}s";
+                        P1RoundScore = $"Score: {(int?)data["myScore"] ?? 0:N0}";
+                        P2RoundScore = $"Score: {(int?)data["enemyScore"] ?? 0:N0}";
+                        P1DamageTaken = P2DamageTaken = "Calculating...";
+                        _p1Img?.SetImage(_match.MyPfp);
+                        _p2Img?.SetImage(_match.EnemyPfp);
+                        SetState(roundResult: true);
+
+                        StopAllCoroutines();
+                        StartCoroutine(AnimateHpLossCoroutine(oldP1, _match.MyHp, oldP2, _match.EnemyHp, (int?)data["myDmgTaken"] ?? 0, (int?)data["enemyDmgTaken"] ?? 0));
+                        break;
+
+                    case "POST_ROUND_TICK":
+                        int postSec = (int?)data["timeLeft"] ?? 0;
+                        PostRoundTimerText = postSec <= 10
+                            ? $"<color=#FF4444>Next Round in {postSec}s</color>"
+                            : $"Next Round in {postSec}s";
+                        NotifyPropertyChanged(nameof(PostRoundTimerText));
+                        break;
+
+                    case "MATCH_OVER":
+                        bool byForfeit = (bool?)data["byForfeit"] ?? false;
+                        if (byForfeit && _mapLauncher.IsCurrentlyInGameplay) _mapLauncher.ForceExitActiveMap();
+                        if (IsRoundResultState && !byForfeit)
                         {
-                            WaitingMyScore = $"Your Score: {myScore:N0}";
-                            SetState(waiting: true);
-                            _ = _net.SendPacketAsync("SUBMIT_SCORE", new { score = myScore });
-                        },
-                        () => _ = _net.SendPacketAsync("FORFEIT_MATCH"));
-                    break;
-
-                case "CARDS_DEALT":
-                    ApplyCardsFromServer(data["cards"] as JArray);
-                    break;
-
-                case "ROUND_RESULT":
-                    _currentRound = (int?)data["roundNumber"] ?? _currentRound;
-                    _currentMultiplier = (int?)data["multiplier"] ?? _currentMultiplier;
-                    int oldP1 = _match.MyHp, oldP2 = _match.EnemyHp;
-                    _match.MyHp = (int?)data["myHp"] ?? RankedMatchManager.MaxHp;
-                    _match.EnemyHp = (int?)data["enemyHp"] ?? RankedMatchManager.MaxHp;
-
-                    PostRoundTimerText = $"Next Round in {(int?)data["timeLeft"] ?? 60}s";
-                    P1RoundScore = $"Score: {(int?)data["myScore"] ?? 0:N0}";
-                    P2RoundScore = $"Score: {(int?)data["enemyScore"] ?? 0:N0}";
-                    P1DamageTaken = P2DamageTaken = "Calculating...";
-                    _p1Img?.SetImage(_match.MyPfp);
-                    _p2Img?.SetImage(_match.EnemyPfp);
-                    SetState(roundResult: true);
-
-                    StopAllCoroutines();
-                    StartCoroutine(AnimateHpLossCoroutine(oldP1, _match.MyHp, oldP2, _match.EnemyHp, (int?)data["myDmgTaken"] ?? 0, (int?)data["enemyDmgTaken"] ?? 0));
-                    break;
-
-                case "POST_ROUND_TICK":
-                    int postSec = (int?)data["timeLeft"] ?? 0;
-                    PostRoundTimerText = postSec <= 10
-                        ? $"<color=#FF4444>Next Round in {postSec}s</color>"
-                        : $"Next Round in {postSec}s";
-                    NotifyPropertyChanged(nameof(PostRoundTimerText));
-                    break;
-
-                case "MATCH_OVER":
-                    bool byForfeit = (bool?)data["byForfeit"] ?? false;
-                    if (byForfeit && _mapLauncher.IsCurrentlyInGameplay) _mapLauncher.ForceExitActiveMap();
-                    if (IsRoundResultState && !byForfeit)
-                    {
-                        _pendingMatchOverData = data;
-                        NotifyPropertyChanged(nameof(HasNextRoundTimer));
-                    }
-                    else ShowMatchOverScreen(data);
-                    break;
+                            _pendingMatchOverData = data;
+                            NotifyPropertyChanged(nameof(HasNextRoundTimer));
+                        }
+                        else ShowMatchOverScreen(data);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.Error($"[BS Ranked] Error handling packet {type}: {ex}");
             }
         }
 
@@ -336,7 +360,7 @@ namespace BSR.UI.ViewControllers
             P1DamageTaken = myDmg > 0 ? $"-{myDmg:N0} DMG{mult}" : "0 DMG (Won Round)";
             P2DamageTaken = enemyDmg > 0 ? $"-{enemyDmg:N0} DMG{mult}" : "0 DMG (Won Round)";
 
-            for (float el = 0f; el < 1.8f; el += Time.deltaTime)
+            for (float el = 0f; el < 1.8f; el += Time.unscaledDeltaTime)
             {
                 float ease = 1f - Mathf.Pow(1f - Mathf.Clamp01(el / 1.8f), 3f);
                 _displayedP1Hp = Mathf.RoundToInt(Mathf.Lerp(s1, e1, ease));
@@ -388,32 +412,64 @@ namespace BSR.UI.ViewControllers
         private async void OnQueueClick()
         {
             if (!_net.IsConnected) return;
-            _isQueueing = !_isQueueing;
-            QueueBtnText = _isQueueing ? "CANCEL QUEUE" : "FIND MATCH";
-            RefreshUI();
-            await _net.SendPacketAsync(_isQueueing ? "JOIN_QUEUE" : "LEAVE_QUEUE");
+            try
+            {
+                _isQueueing = !_isQueueing;
+                QueueBtnText = _isQueueing ? "CANCEL QUEUE" : "FIND MATCH";
+                RefreshUI();
+                await _net.SendPacketAsync(_isQueueing ? "JOIN_QUEUE" : "LEAVE_QUEUE");
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.Warn($"[BS Ranked] Queue error: {ex.Message}");
+            }
         }
 
         [UIAction("on-reconnect-click")]
         private async void OnReconnectClick()
         {
-            RefreshUI();
-            await _net.ConnectAsync();
+            try
+            {
+                RefreshUI();
+                await _net.ConnectAsync();
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.Warn($"[BS Ranked] Reconnect error: {ex.Message}");
+            }
         }
 
         [UIAction("on-ready-click")]
         private async void OnReadyClick()
         {
-            CanClickReady = false; ReadyBtnText = "Waiting for opponent..."; RefreshUI();
-            await _net.SendPacketAsync("PLAYER_READY");
+            try
+            {
+                CanClickReady = false;
+                ReadyBtnText = "Waiting for opponent...";
+                RefreshUI();
+                await _net.SendPacketAsync("PLAYER_READY");
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.Warn($"[BS Ranked] Ready error: {ex.Message}");
+            }
         }
 
         [UIAction("on-reroll-click")]
         private async void OnRerollClick()
         {
-            if (!IsMyTurn || !_canReroll) return;
-            _canReroll = false; RerollBtnText = "Reroll Used"; RefreshUI();
-            await _net.SendPacketAsync("REROLL_CARDS");
+            try
+            {
+                if (!IsMyTurn || !_canReroll) return;
+                _canReroll = false;
+                RerollBtnText = "Reroll Used";
+                RefreshUI();
+                await _net.SendPacketAsync("REROLL_CARDS");
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.Warn($"[BS Ranked] Reroll error: {ex.Message}");
+            }
         }
 
         [UIAction("pick-card-1")] private void PickCard1() => OnMapSelected(0);
@@ -422,22 +478,43 @@ namespace BSR.UI.ViewControllers
 
         private async void OnMapSelected(int index)
         {
-            if (IsMyTurn) await _net.SendPacketAsync("PICK_CARD", new { cardIndex = index });
+            try
+            {
+                if (IsMyTurn)
+                {
+                    IsMyTurn = false;
+                    RefreshUI();
+                    await _net.SendPacketAsync("PICK_CARD", new { cardIndex = index });
+                }
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.Warn($"[BS Ranked] Pick card error: {ex.Message}");
+            }
         }
 
         [UIAction("on-continue-after-round")]
         private async void OnContinueAfterRound()
         {
-            if (_pendingMatchOverData != null)
+            try
             {
-                var data = _pendingMatchOverData;
-                _pendingMatchOverData = null;
-                ShowMatchOverScreen(data);
+                if (_pendingMatchOverData != null)
+                {
+                    var data = _pendingMatchOverData;
+                    _pendingMatchOverData = null;
+                    ShowMatchOverScreen(data);
+                }
+                else
+                {
+                    CanContinueRound = false;
+                    ContinueBtnText = "Waiting for opponent...";
+                    RefreshUI();
+                    await _net.SendPacketAsync("READY_FOR_NEXT_ROUND");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                CanContinueRound = false; ContinueBtnText = "Waiting for opponent..."; RefreshUI();
-                await _net.SendPacketAsync("READY_FOR_NEXT_ROUND");
+                Plugin.Log.Warn($"[BS Ranked] Continue round error: {ex.Message}");
             }
         }
 

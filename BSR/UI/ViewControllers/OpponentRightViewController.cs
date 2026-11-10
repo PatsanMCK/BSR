@@ -29,7 +29,8 @@ namespace BSR.UI.ViewControllers
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
-            if (firstActivation) _net.OnPacketReceived += HandlePacket;
+            _net.OnPacketReceived -= HandlePacket;
+            _net.OnPacketReceived += HandlePacket;
             RefreshUI();
         }
 
@@ -64,7 +65,14 @@ namespace BSR.UI.ViewControllers
             CanForfeit = false;
             ForfeitBtnText = "Forfeiting...";
             RefreshUI();
-            await _net.SendPacketAsync("FORFEIT_MATCH");
+            try
+            {
+                await _net.SendPacketAsync("FORFEIT_MATCH");
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.Warn($"[BS Ranked] Forfeit error: {ex.Message}");
+            }
         }
 
         private void HandlePacket(string type, JObject data)

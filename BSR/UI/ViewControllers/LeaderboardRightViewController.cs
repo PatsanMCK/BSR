@@ -39,8 +39,15 @@ namespace BSR.UI.ViewControllers
             _net.OnPacketReceived += HandleServerPacket;
 
             RefreshUI();
-            if (_net.IsConnected)
-                await _net.SendPacketAsync("GET_LEADERBOARD");
+            try
+            {
+                if (_net.IsConnected)
+                    await _net.SendPacketAsync("GET_LEADERBOARD");
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.Warn($"[BS Ranked] Leaderboard DidActivate error: {ex.Message}");
+            }
         }
 
         protected override void DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling)
@@ -52,8 +59,15 @@ namespace BSR.UI.ViewControllers
         [UIAction("on-refresh-click")]
         private async void OnRefreshClick()
         {
-            if (_net.IsConnected)
-                await _net.SendPacketAsync("GET_LEADERBOARD");
+            try
+            {
+                if (_net.IsConnected)
+                    await _net.SendPacketAsync("GET_LEADERBOARD");
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.Warn($"[BS Ranked] Leaderboard refresh error: {ex.Message}");
+            }
         }
 
         private void HandleServerPacket(string type, JObject data)

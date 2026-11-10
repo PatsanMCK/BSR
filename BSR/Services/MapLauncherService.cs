@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -8,14 +9,47 @@ using System.Threading;
 using System.Threading.Tasks;
 using BS_Utils.Gameplay;
 using BSR.Configuration;
+using BSR.HarmonyPatches;
 using IPA.Utilities;
 using IPA.Utilities.Async;
 using SongCore;
 using UnityEngine;
+using UnityEngine.UI;
 using Zenject;
 
 namespace BSR.Services
 {
+    public static class BeatmapExtensions
+    {
+        public static bool IsValid(this BeatmapKey key) => key.beatmapCharacteristic != null && !string.IsNullOrEmpty(key.levelId);
+
+        public static IEnumerable<BeatmapKey> GetAllBeatmapKeys(this BeatmapLevel level)
+        {
+            if (level == null) return Enumerable.Empty<BeatmapKey>();
+
+            var method = level.GetType().GetMethod("GetBeatmapKeys", BindingFlags.Public | BindingFlags.Instance);
+            if (method != null && method.Invoke(level, null) is IEnumerable<BeatmapKey> mKeys)
+                return mKeys;
+
+            var prop = level.GetType().GetProperty("beatmapBasicData", BindingFlags.Public | BindingFlags.Instance);
+            if (prop?.GetValue(level) is System.Collections.IDictionary dict)
+                return dict.Keys.OfType<BeatmapKey>();
+
+            foreach (var p in level.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                if (typeof(System.Collections.IDictionary).IsAssignableFrom(p.PropertyType))
+                {
+                    if (p.GetValue(level) is System.Collections.IDictionary d)
+                    {
+                        var dKeys = d.Keys.OfType<BeatmapKey>().ToList();
+                        if (dKeys.Count > 0) return dKeys;
+                    }
+                }
+            }
+            return Enumerable.Empty<BeatmapKey>();
+        }
+    }
+
     public class MapLauncherService
     {
         private static readonly string[] AllowedMapExtensions =
@@ -54,7 +88,7 @@ namespace BSR.Services
                 for (int i = 0; i < 50 && !Loader.AreSongsLoaded; i++)
                     await Task.Delay(200);
 
-                if (Loader.GetLevelByHash(upperHash) != null && _beatmapLevelsModel.GetBeatmapLevel(levelId) != null)
+                if (Loader.GetLevelByHash(upperHash) != null || _beatmapLevelsModel.GetBeatmapLevel(levelId) != null)
                     return;
 
                 string mapFolder = Path.Combine(UnityGame.InstallPath, "Beat Saber_Data", "CustomLevels", upperHash);
@@ -130,6 +164,7 @@ namespace BSR.Services
             string upperHash = hash.ToUpperInvariant();
             string expectedLevelId = $"custom_level_{upperHash}";
 
+            PreventPausePatch.ResetPauseAllowance();
             await EnsureMapDownloadedAsync(hash, songTitle, downloadUrl);
 
             await UnityMainThreadTaskScheduler.Factory.StartNew(async () =>
@@ -155,11 +190,18 @@ namespace BSR.Services
                     if (!Enum.TryParse(difficultyName, true, out BeatmapDifficulty difficulty))
                         difficulty = BeatmapDifficulty.ExpertPlus;
 
-                    var keys = beatmapLevel.GetBeatmapKeys();
+                    var keys = beatmapLevel.GetAllBeatmapKeys().ToList();
                     var targetKey = keys.FirstOrDefault(k => k.difficulty == difficulty &&
+                        k.beatmapCharacteristic != null &&
                         k.beatmapCharacteristic.serializedName.Equals(characteristicName ?? "Standard", StringComparison.OrdinalIgnoreCase));
                     if (!targetKey.IsValid()) targetKey = keys.FirstOrDefault(k => k.difficulty == difficulty);
                     if (!targetKey.IsValid()) targetKey = keys.LastOrDefault();
+
+                    if (!targetKey.IsValid())
+                    {
+                        Plugin.Log.Error($"[BS Ranked] Could not find a valid BeatmapKey for {upperHash}");
+                        return;
+                    }
 
                     var playerData = _playerDataModel.playerData;
                     bool submitScores = PluginConfig.Instance?.EnableScoreSubmission ?? false;
@@ -288,7 +330,7 @@ namespace BSR.Services
                     (_, "GameplayModifiers") => modifiers,
                     (_, "PlayerSpecificSettings") => playerData.playerSpecificSettings,
                     (_, "EnvironmentsListModel") => _environmentsListModel,
-                    _ when pType == typeof(bool) => pName.IndexOf("Lightshow", StringComparison.OrdinalIgnoreCase) >= 0,
+                    _ when pType == typeof(bool) => p.HasDefaultValue ? (bool)p.DefaultValue : false,
                     _ when Nullable.GetUnderlyingType(pType) != null => null,
                     _ => p.HasDefaultValue ? p.DefaultValue : null
                 };
@@ -317,9 +359,19 @@ namespace BSR.Services
             try
             {
                 var pause = UnityEngine.Object.FindObjectOfType<PauseController>();
+                const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
                 var returnCtrl = pause != null
-                    ? ReflectionUtil.GetField<IReturnToMenuController, PauseController>(pause, "_returnToMenuController")
+                    ? (typeof(PauseController).GetField("_returnToMenuController", flags)?.GetValue(pause) as IReturnToMenuController)
                     : null;
+
+                if (returnCtrl == null)
+                {
+                    var pauseMenu = UnityEngine.Object.FindObjectOfType<PauseMenuManager>();
+                    if (pauseMenu != null)
+                    {
+                        returnCtrl = typeof(PauseMenuManager).GetField("_returnToMenuController", flags)?.GetValue(pauseMenu) as IReturnToMenuController;
+                    }
+                }
 
                 if (returnCtrl == null)
                 {
@@ -328,7 +380,18 @@ namespace BSR.Services
                         .FirstOrDefault();
                 }
 
-                returnCtrl?.ReturnToMenu();
+                if (returnCtrl != null)
+                {
+                    returnCtrl.ReturnToMenu();
+                }
+                else
+                {
+                    // Fallback: invoke the pause menu's back/forfeit button directly
+                    var pauseMenu = UnityEngine.Object.FindObjectOfType<PauseMenuManager>();
+                    var backBtn = pauseMenu?.GetComponentsInChildren<Button>(true)
+                        .FirstOrDefault(b => b.name.IndexOf("Back", StringComparison.OrdinalIgnoreCase) >= 0 || b.name.IndexOf("Menu", StringComparison.OrdinalIgnoreCase) >= 0);
+                    backBtn?.onClick.Invoke();
+                }
             }
             catch (Exception ex)
             {

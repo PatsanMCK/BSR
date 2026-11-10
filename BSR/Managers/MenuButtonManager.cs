@@ -19,7 +19,14 @@ namespace BSR.Managers
             _menuButton = new MenuButton("BS Ranked", "1v1 Ranked similar to osu!", OnMenuButtonClick, true);
         }
 
-        public void Initialize() => _menuButtons.RegisterButton(_menuButton);
+        public void Initialize()
+        {
+            _menuButtons.RegisterButton(_menuButton);
+            if (RankedMatchManager.IsInRankedMatch)
+            {
+                BeatSaberUI.MainFlowCoordinator.PresentFlowCoordinator(_flowCoordinator);
+            }
+        }
 
         public void Dispose() => _menuButtons.UnregisterButton(_menuButton);
 

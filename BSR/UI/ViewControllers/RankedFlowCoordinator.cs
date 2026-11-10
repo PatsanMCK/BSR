@@ -24,13 +24,27 @@ namespace BSR.UI
             if (firstActivation)
             {
                 SetTitle("BS RANKED");
-                showBackButton = true;
 
+                _mainMatchView.OnMatchFoundEvent -= HandleMatchFound;
                 _mainMatchView.OnMatchFoundEvent += HandleMatchFound;
+                _mainMatchView.OnMatchConcludedEvent -= HandleMatchConcluded;
                 _mainMatchView.OnMatchConcludedEvent += HandleMatchConcluded;
 
-                // Lobby state: Center = Queue Hub, Left = Your Profile, Right = Top 5 Leaderboard
-                ProvideInitialViewControllers(_mainMatchView, _profileLeftView, _leaderboardRightView);
+                if (RankedMatchManager.IsInRankedMatch)
+                {
+                    showBackButton = false;
+                    var screenSystem = this.GetField<ScreenSystem, FlowCoordinator>("_screenSystem");
+                    screenSystem?.SetBackButton(false, false);
+
+                    ConfigureGameplaySetupViewController(showModifiers: false);
+                    ProvideInitialViewControllers(_mainMatchView, _gameplaySetupViewController, _opponentRightView);
+                }
+                else
+                {
+                    showBackButton = true;
+                    // Lobby state: Center = Queue Hub, Left = Your Profile, Right = Top 5 Leaderboard
+                    ProvideInitialViewControllers(_mainMatchView, _profileLeftView, _leaderboardRightView);
+                }
             }
             else if (RankedMatchManager.IsInRankedMatch)
             {

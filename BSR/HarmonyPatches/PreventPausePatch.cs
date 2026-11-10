@@ -13,9 +13,17 @@ namespace BSR.HarmonyPatches
     // =========================================================================
     // 1. FPFC KEYBOARD KEYBIND (Press P or Escape in FPFC to pop out menu!)
     // =========================================================================
-    [HarmonyPatch(typeof(PauseController), "Start")]
+    [HarmonyPatch]
     public class FpfcPauseKeybindPatch
     {
+        private static MethodBase TargetMethod()
+        {
+            const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+            return typeof(PauseController).GetMethod("Start", flags)
+                ?? typeof(PauseController).GetMethod("Initialize", flags)
+                ?? typeof(PauseController).GetMethod("Awake", flags);
+        }
+
         private static void Postfix(PauseController __instance)
         {
             if (__instance != null && __instance.gameObject.GetComponent<FpfcPauseKeybindHelper>() == null)
@@ -38,9 +46,16 @@ namespace BSR.HarmonyPatches
         {
             if (Input.GetKeyDown(KeyCode.P) || Input.GetKeyDown(KeyCode.Escape))
             {
-                if (_pauseController != null && _pauseController.enabled)
+                try
                 {
-                    _pauseController.Pause();
+                    if (_pauseController != null && _pauseController.enabled)
+                    {
+                        _pauseController.Pause();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Plugin.Log.Warn($"[BS Ranked] Could not pause via FPFC keybind: {ex.Message}");
                 }
             }
         }
@@ -49,9 +64,16 @@ namespace BSR.HarmonyPatches
     // =========================================================================
     // 2. BLOCK CONTROLLER RESUME ONCE PAUSE TIME IS EXHAUSTED
     // =========================================================================
-    [HarmonyPatch(typeof(PauseMenuManager), "ContinueButtonPressed")]
+    [HarmonyPatch]
     public class BlockContinueButtonPatch
     {
+        private static MethodBase TargetMethod()
+        {
+            const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+            return typeof(PauseMenuManager).GetMethod("ContinueButtonPressed", flags)
+                ?? typeof(PauseMenuManager).GetMethod("HandleResumeEvent", flags);
+        }
+
         private static bool Prefix()
         {
             if (RankedMatchManager.IsInRankedMatch && PreventPausePatch.RemainingPauseTime <= 0f)
@@ -62,9 +84,15 @@ namespace BSR.HarmonyPatches
         }
     }
 
-    [HarmonyPatch(typeof(PauseMenuManager), "StartResumeAnimation")]
+    [HarmonyPatch]
     public class BlockResumeAnimationPatch
     {
+        private static MethodBase TargetMethod()
+        {
+            const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+            return typeof(PauseMenuManager).GetMethod("StartResumeAnimation", flags);
+        }
+
         private static bool Prefix()
         {
             if (RankedMatchManager.IsInRankedMatch && PreventPausePatch.RemainingPauseTime <= 0f)
@@ -78,7 +106,7 @@ namespace BSR.HarmonyPatches
     // =========================================================================
     // 3. ANTI-STALL PAUSE MENU (Restart hidden, timer removes Continue button)
     // =========================================================================
-    [HarmonyPatch(typeof(PauseMenuManager), nameof(PauseMenuManager.ShowMenu))]
+    [HarmonyPatch]
     public class PreventPausePatch
     {
         public const float MaxPauseSecondsPerMap = 3.0f;
@@ -89,6 +117,20 @@ namespace BSR.HarmonyPatches
         private static Coroutine _antiStallCoroutine;
 
         public static float RemainingPauseTime => _remainingPauseTime;
+
+        public static void ResetPauseAllowance()
+        {
+            _remainingPauseTime = MaxPauseSecondsPerMap;
+            _currentMapPauseManager = null;
+            _antiStallCoroutine = null;
+        }
+
+        private static MethodBase TargetMethod()
+        {
+            const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+            return typeof(PauseMenuManager).GetMethod(nameof(PauseMenuManager.ShowMenu), flags)
+                ?? typeof(PauseMenuManager).GetMethod("ShowMenu", flags);
+        }
 
         private static void Postfix(PauseMenuManager __instance)
         {
@@ -156,7 +198,7 @@ namespace BSR.HarmonyPatches
                     continueButton.transform.localScale = Vector3.one;
                 }
 
-                while (pauseMenu != null && pauseMenu.enabled && _remainingPauseTime > 0f)
+                while (pauseMenu != null && pauseMenu.isActiveAndEnabled && pauseMenu.gameObject.activeInHierarchy && _remainingPauseTime > 0f)
                 {
                     // Ensure restart button stays hidden even if an animator ticks
                     if (restartButton != null && (restartButton.gameObject.activeSelf || restartButton.transform.localScale != Vector3.zero))
@@ -174,8 +216,15 @@ namespace BSR.HarmonyPatches
                     yield return null;
                 }
 
+                // If menu was closed while player still had pause time left, restore label and exit cleanly!
                 if (continueText != null)
                     continueText.text = originalContinueLabel;
+
+                if (pauseMenu == null || !pauseMenu.isActiveAndEnabled || !pauseMenu.gameObject.activeInHierarchy)
+                {
+                    // Player unpaused and returned to gameplay! Do NOT continue to stall/forfeit logic!
+                    yield break;
+                }
             }
 
             // PHASE 2: Timer reached 0s -> Remove the Continue button completely!
@@ -197,7 +246,7 @@ namespace BSR.HarmonyPatches
 
             // PHASE 3: Stall protection (auto-forfeit after timeout)
             float stallTimer = AutoForfeitStallTimeout;
-            while (pauseMenu != null && pauseMenu.enabled && stallTimer > 0f)
+            while (pauseMenu != null && pauseMenu.isActiveAndEnabled && pauseMenu.gameObject.activeInHierarchy && stallTimer > 0f)
             {
                 if (continueButton != null && continueButton.gameObject.activeSelf)
                     continueButton.gameObject.SetActive(false);
@@ -209,7 +258,7 @@ namespace BSR.HarmonyPatches
                 yield return null;
             }
 
-            if (pauseMenu != null && pauseMenu.enabled && stallTimer <= 0f)
+            if (pauseMenu != null && pauseMenu.isActiveAndEnabled && pauseMenu.gameObject.activeInHierarchy && stallTimer <= 0f)
             {
                 Plugin.Log.Warn("[BS Ranked] Player stalled in pause menu without clicking Forfeit -> Auto-forfeiting!");
                 backButton?.onClick.Invoke();
