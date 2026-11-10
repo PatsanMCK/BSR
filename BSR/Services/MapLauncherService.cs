@@ -18,6 +18,11 @@ namespace BSR.Services
 {
     public class MapLauncherService
     {
+        private static readonly string[] AllowedMapExtensions =
+        {
+            ".dat", ".json", ".egg", ".ogg", ".wav", ".png", ".jpg", ".jpeg", ".vivify"
+        };
+
         private static readonly MethodInfo CachedStartStandardLevelMethod = typeof(MenuTransitionsHelper)
             .GetMethods(BindingFlags.Public | BindingFlags.Instance)
             .Where(m => m.Name == "StartStandardLevel")
@@ -65,9 +70,8 @@ namespace BSR.Services
                     if (Directory.Exists(mapFolder)) Directory.Delete(mapFolder, true);
                     Directory.CreateDirectory(mapFolder);
 
-                    byte[] zipBytes = await _http.GetByteArrayAsync(downloadUrl);
-                    using var ms = new MemoryStream(zipBytes);
-                    using var archive = new ZipArchive(ms, ZipArchiveMode.Read);
+                    using var responseStream = await _http.GetStreamAsync(downloadUrl);
+                    using var archive = new ZipArchive(responseStream, ZipArchiveMode.Read);
 
                     string fullDestinationDir = Path.GetFullPath(mapFolder);
                     if (!fullDestinationDir.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal))
@@ -75,6 +79,10 @@ namespace BSR.Services
 
                     foreach (var entry in archive.Entries.Where(e => !string.IsNullOrEmpty(e.Name)))
                     {
+                        string ext = Path.GetExtension(entry.Name);
+                        if (!AllowedMapExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase))
+                            continue;
+
                         string destinationPath = Path.GetFullPath(Path.Combine(mapFolder, entry.FullName));
                         if (!destinationPath.StartsWith(fullDestinationDir, StringComparison.OrdinalIgnoreCase))
                             throw new IOException("Zip entry attempted directory traversal outside target directory.");
@@ -89,13 +97,11 @@ namespace BSR.Services
                     }
                 }
 
-                // TournamentAssistant pattern: Refresh SongCore and wait for SongsLoadedEvent + BeatmapLevelsModel registration
                 await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
                     Loader.Instance.RefreshSongs(false);
                 });
 
-                // Give SongCore a moment to begin refreshing, then poll until AreSongsLoaded && level is in BeatmapLevelsModel
                 await Task.Delay(400);
                 for (int i = 0; i < 60; i++)
                 {
@@ -130,7 +136,6 @@ namespace BSR.Services
             {
                 try
                 {
-                    // Prefer BeatmapLevelsModel first (ensures CustomLevelLoader has linked the .dat note files)
                     var beatmapLevel = _beatmapLevelsModel.GetBeatmapLevel(expectedLevelId)
                                     ?? Loader.GetLevelByHash(upperHash);
 
@@ -140,7 +145,6 @@ namespace BSR.Services
                         return;
                     }
 
-                    // Cross-version safe IBeatmapLevelData loader (works on both 1.39.1 and 1.40.8)
                     var beatmapLevelData = await LoadLevelDataCrossVersionAsync(beatmapLevel.levelID);
                     if (beatmapLevelData == null)
                     {
@@ -160,8 +164,6 @@ namespace BSR.Services
                     var playerData = _playerDataModel.playerData;
                     bool submitScores = PluginConfig.Instance?.EnableScoreSubmission ?? false;
 
-                    // TournamentAssistant pattern: Use explicit 15-parameter constructor instead of .CopyWith()
-                    // Prevents 1.40.8 -> 1.39.1 optional parameter shift from turning on Zen Mode (0 notes)!
                     var modifiers = new GameplayModifiers(
                         energyType: GameplayModifiers.EnergyType.Bar,
                         noFailOn0Energy: true,
@@ -228,7 +230,7 @@ namespace BSR.Services
                         var pType = parms[i].ParameterType;
                         if (pType == typeof(string)) args[i] = levelId;
                         else if (pType == typeof(CancellationToken)) args[i] = CancellationToken.None;
-                        else if (pType.IsEnum) args[i] = Enum.ToObject(pType, 0); // BeatmapLevelDataVersion.Original
+                        else if (pType.IsEnum) args[i] = Enum.ToObject(pType, 0);
                         else args[i] = parms[i].HasDefaultValue ? parms[i].DefaultValue : null;
                     }
 

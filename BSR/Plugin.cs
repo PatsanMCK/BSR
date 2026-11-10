@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using BS_Utils.Gameplay;
@@ -67,20 +66,13 @@ namespace BSR
         {
             try
             {
-                var yeet2Type = AppDomain.CurrentDomain.GetAssemblies()
-                    .SelectMany(a =>
-                    {
-                        try { return a.GetTypes(); }
-                        catch { return Type.EmptyTypes; }
-                    })
-                    .FirstOrDefault(t => t.FullName == "NoteMovementFix.Patches.Yeet2");
-
+                var yeet2Type = AccessTools.TypeByName("NoteMovementFix.Patches.Yeet2");
                 if (yeet2Type != null)
                 {
-                    var prefixMethod = yeet2Type.GetMethod("Prefix", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-                    if (prefixMethod != null)
+                    var prefixMethod = AccessTools.Method(yeet2Type, "Prefix");
+                    var finalizer = AccessTools.Method(typeof(Plugin), nameof(SuppressYeet2NullRefFinalizer));
+                    if (prefixMethod != null && finalizer != null)
                     {
-                        var finalizer = typeof(Plugin).GetMethod(nameof(SuppressYeet2NullRefFinalizer), BindingFlags.NonPublic | BindingFlags.Static);
                         _harmony.Patch(prefixMethod, finalizer: new HarmonyMethod(finalizer));
                         Log.Info("[BS Ranked] Applied JDFixer (NoteMovementFix.Patches.Yeet2) NullReferenceException shield!");
                     }

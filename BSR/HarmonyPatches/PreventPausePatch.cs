@@ -7,12 +7,11 @@ using HarmonyLib;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Windows;
 
 namespace BSR.HarmonyPatches
 {
     // =========================================================================
-    // 1. FPFC KEYBOARD PAUSE KEYBIND (Press P or Escape in FPFC to pop out menu!)
+    // 1. FPFC KEYBOARD KEYBIND (Press P or Escape in FPFC to pop out menu!)
     // =========================================================================
     [HarmonyPatch(typeof(PauseController), "Start")]
     public class FpfcPauseKeybindPatch
@@ -28,29 +27,7 @@ namespace BSR.HarmonyPatches
 
     public class FpfcPauseKeybindHelper : MonoBehaviour
     {
-        private static readonly Func<KeyCode, bool> GetKeyDownDelegate = InitGetKeyDown();
         private PauseController _pauseController;
-
-        private static Func<KeyCode, bool> InitGetKeyDown()
-        {
-            try
-            {
-                var inputType = Type.GetType("UnityEngine.Input, UnityEngine.InputLegacyModule")
-                             ?? Type.GetType("UnityEngine.Input, UnityEngine.CoreModule")
-                             ?? typeof(Input);
-
-                var method = inputType?.GetMethod("GetKeyDown", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(KeyCode) }, null);
-                if (method != null)
-                {
-                    return (Func<KeyCode, bool>)Delegate.CreateDelegate(typeof(Func<KeyCode, bool>), method);
-                }
-            }
-            catch (Exception ex)
-            {
-                Plugin.Log.Warn($"[BS Ranked] Could not bind Input.GetKeyDown delegate: {ex.Message}");
-            }
-            return null;
-        }
 
         private void Awake()
         {
@@ -59,7 +36,7 @@ namespace BSR.HarmonyPatches
 
         private void Update()
         {
-            if (GetKeyDownDelegate != null && (GetKeyDownDelegate(KeyCode.P) || GetKeyDownDelegate(KeyCode.Escape)))
+            if (Input.GetKeyDown(KeyCode.P) || Input.GetKeyDown(KeyCode.Escape))
             {
                 if (_pauseController != null && _pauseController.enabled)
                 {
@@ -77,7 +54,6 @@ namespace BSR.HarmonyPatches
     {
         private static bool Prefix()
         {
-            // If the pause allowance is used up during a ranked match, disallow resuming!
             if (RankedMatchManager.IsInRankedMatch && PreventPausePatch.RemainingPauseTime <= 0f)
             {
                 return false;
@@ -202,7 +178,7 @@ namespace BSR.HarmonyPatches
                     continueText.text = originalContinueLabel;
             }
 
-            // PHASE 2: Timer reached 0s -> DO NOT UNPAUSE! Simply remove the Continue button completely!
+            // PHASE 2: Timer reached 0s -> Remove the Continue button completely!
             if (continueButton != null)
             {
                 continueButton.gameObject.SetActive(false);
@@ -219,11 +195,10 @@ namespace BSR.HarmonyPatches
 
             Plugin.Log.Info($"[BS Ranked] {MaxPauseSecondsPerMap}s pause time expired -> Removed Continue button. Only Forfeit is available!");
 
-            // PHASE 3: Stall protection (if the player leaves their headset on the floor, auto-forfeit after timeout)
+            // PHASE 3: Stall protection (auto-forfeit after timeout)
             float stallTimer = AutoForfeitStallTimeout;
             while (pauseMenu != null && pauseMenu.enabled && stallTimer > 0f)
             {
-                // Ensure continue and restart buttons remain hidden
                 if (continueButton != null && continueButton.gameObject.activeSelf)
                     continueButton.gameObject.SetActive(false);
 
@@ -234,7 +209,6 @@ namespace BSR.HarmonyPatches
                 yield return null;
             }
 
-            // If stall timeout passes without clicking Forfeit, trigger forfeit
             if (pauseMenu != null && pauseMenu.enabled && stallTimer <= 0f)
             {
                 Plugin.Log.Warn("[BS Ranked] Player stalled in pause menu without clicking Forfeit -> Auto-forfeiting!");
