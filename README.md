@@ -32,6 +32,7 @@
 # Feedback and some more things. 
 - If you have any feedback regarding the systems or the mod in general, you can contact me on Discord: patsanmck
 - A lot of things are still subject to change
+- Server-side is kept private because I am not sure if it's safe to do so. You can view everything the game sends to the server if you are suspicious of somethings
 
 
 
