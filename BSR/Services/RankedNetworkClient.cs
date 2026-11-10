@@ -50,7 +50,7 @@ namespace BSR.Services
                 _ws?.Dispose();
                 _ws = new ClientWebSocket();
 
-                string serverUrl = PluginConfig.Instance?.ServerUrl ?? "ws://23.26.37.183:8080";
+                string serverUrl = PluginConfig.Instance?.ServerUrl ?? "ws://ranked.beatsabercis.dpdns.org:8080";
                 Plugin.Log.Info($"[BS Ranked] Connecting to {serverUrl}...");
 
                 await _ws.ConnectAsync(new Uri(serverUrl), _cts.Token);
@@ -60,6 +60,7 @@ namespace BSR.Services
                 var userInfo = await GetUserInfo.GetUserAsync();
                 if (userInfo != null && !string.IsNullOrEmpty(userInfo.platformUserId))
                 {
+                    _matchManager.MySteamId = userInfo.platformUserId;
                     _matchManager.MySteamId = userInfo.platformUserId;
                     _matchManager.MyName = userInfo.userName ?? "Player";
                 }

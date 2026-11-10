@@ -82,7 +82,7 @@ namespace BSR.HarmonyPatches
     public class PreventPausePatch
     {
         public const float MaxPauseSecondsPerMap = 3.0f;
-        private const float AutoForfeitStallTimeout = 15.0f;
+        private const float AutoForfeitStallTimeout = 7.0f;
 
         private static PauseMenuManager _currentMapPauseManager;
         private static float _remainingPauseTime = MaxPauseSecondsPerMap;

@@ -173,7 +173,7 @@ namespace BSR.UI.ViewControllers
             _pendingMatchOverData = null;
             _match.MyHp = _match.EnemyHp = _displayedP1Hp = _displayedP2Hp = RankedMatchManager.MaxHp;
             _canReroll = true;
-            RerollBtnText = "Reroll Hand (1 Left)";
+            RerollBtnText = "Reroll Hand";
             DraftTimerText = $"Pick Time Left: {(int?)matchData?["timeLeft"] ?? 90}s";
 
             if (matchData != null)
@@ -211,7 +211,7 @@ namespace BSR.UI.ViewControllers
 
                 case "START_DRAFT":
                     _canReroll = true;
-                    RerollBtnText = "Reroll Hand (1 Left)";
+                    RerollBtnText = "Reroll Hand";
                     _currentRound = (int?)data["roundNumber"] ?? (_currentRound + 1);
                     _currentMultiplier = (int?)data["multiplier"] ?? 1;
                     _pickerName = data["pickerName"]?.ToString() ?? "Opponent";
@@ -272,7 +272,6 @@ namespace BSR.UI.ViewControllers
                         data["Characteristic"]?.ToString() ?? "Standard",
                         myScore =>
                         {
-                            // Display the "Waiting for Opponent" screen with your score as soon as you finish!
                             WaitingMyScore = $"Your Score: {myScore:N0}";
                             SetState(waiting: true);
                             _ = _net.SendPacketAsync("SUBMIT_SCORE", new { score = myScore });

@@ -12,11 +12,11 @@ namespace BSR.UI.ViewControllers
         [Inject] private readonly RankedMatchManager _match;
         [Inject] private readonly RankedNetworkClient _net;
 
-        // Top #1 Champion Row
+        // Top #1 
         [UIValue("top1-left")] public string Top1Left { get; set; } = "<color=#FFD700>#1</color>";
         [UIValue("top1-right")] public string Top1Right { get; set; } = "<color=#888888>---</color>";
 
-        // 5 Neighborhood Rows (2 Above, You, 2 Below)
+        // 5 Neighborhood Rows (2 Above, player, 2 Below)
         [UIValue("row1-left")] public string Row1Left { get; set; } = "";
         [UIValue("row1-right")] public string Row1Right { get; set; } = "<color=#888888>---</color>";
 
@@ -64,7 +64,7 @@ namespace BSR.UI.ViewControllers
             }
             else if (type == "LEADERBOARD_DATA" && data != null)
             {
-                // 1. Format #1 Global Champion
+                // 1. Format #1
                 if (data["topOne"] is JObject top1)
                 {
                     string name = top1["name"]?.ToString() ?? "Player";
@@ -86,7 +86,7 @@ namespace BSR.UI.ViewControllers
                     Top1Right = "<color=#888888>---</color>";
                 }
 
-                // 2. Format 5 Neighborhood Rows (2 above, you, 2 below)
+                // 2. Format 5 Neighborhood Rows (2 above, player, 2 below)
                 var neighborhood = data["neighborhood"] as JArray;
 
                 FormatNeighborhoodRow(0, neighborhood, out string l1, out string r1); Row1Left = l1; Row1Right = r1;
@@ -111,7 +111,6 @@ namespace BSR.UI.ViewControllers
 
                 if (isMe)
                 {
-                    // Highlight YOU in bright cyan!
                     leftText = $"<color=#00FFCC><b>#{rank}</b>  [{tierDetails.tier}]</color>";
                     rightText = $"<color=#00FFCC><b>{name}</b> ({elo})</color>";
                 }

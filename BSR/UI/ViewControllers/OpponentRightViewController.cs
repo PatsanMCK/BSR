@@ -4,6 +4,7 @@ using BSR.Managers;
 using BSR.Services;
 using HMUI;
 using Newtonsoft.Json.Linq;
+using TMPro;
 using Zenject;
 
 namespace BSR.UI.ViewControllers
@@ -15,8 +16,9 @@ namespace BSR.UI.ViewControllers
         [Inject] private readonly RankedNetworkClient _net;
 
         [UIComponent("opponent-pfp-img")] private readonly ImageView _pfpImage;
+        [UIComponent("opponent-name-txt")] private readonly TextMeshProUGUI _nameText;
 
-        [UIValue("opponent-name")] public string OpponentName => _match.EnemyName;
+        [UIValue("opponent-name")] public string OpponentName => string.IsNullOrEmpty(_match.EnemyName) ? "Opponent" : _match.EnemyName;
         [UIValue("opponent-tier")] public string OpponentTier => _match.GetRankDetails(_match.EnemyElo) is var d ? $"<color={d.colorHex}>{d.tier}</color>" : "B";
         [UIValue("opponent-elo")] public string OpponentElo => $"{_match.EnemyElo}";
         [UIValue("opponent-avg-stars")] public string OpponentAvgStars => $"Top Page Avg: {_match.EnemyAvgStars:F2} ★";
@@ -84,8 +86,14 @@ namespace BSR.UI.ViewControllers
         public override void RefreshUI()
         {
             base.RefreshUI();
+            if (_nameText != null)
+            {
+                _nameText.text = OpponentName;
+            }
             if (_pfpImage != null && !string.IsNullOrEmpty(_match.EnemyPfp))
+            {
                 _pfpImage.SetImage(_match.EnemyPfp);
+            }
         }
     }
 }

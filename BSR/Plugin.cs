@@ -21,7 +21,7 @@ namespace BSR
     public class Plugin
     {
         internal static IPALogger Log { get; private set; }
-        internal static string LocalSteamId { get; private set; } = "76561198000000000";
+        internal static string LocalSteamId { get; private set; } = "76561197960287930";
         internal static string LocalUserName { get; private set; } = "Player";
 
         private Harmony _harmony;
