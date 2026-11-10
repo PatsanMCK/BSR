@@ -4,6 +4,13 @@
 > 
 > With that said, this mod went through thorough testing and had it's code reviewed by a human being. If you are ok with that, carry on.
 
+# Requirements
+> BSIPA (4.3.0+)
+> BeatSaberMarkupLanguage (1.11.0+))
+> BS Utils (1.14.0+)
+> SongCore (3.12.0+)
+> SiraUtil (3.1.0+)
+- This mod was tested on 1.40.8 , 1.39.1 and 1.39.0 . Another versions of the game weren't tested
 # What this mod brings to the game
 - This mod brings the experience of Ranked mode from osu! to Beat Saber, which means:
 	- Players are playing duels for ELO points (everyone starts at 1000 ELO)
