@@ -45,7 +45,7 @@ With CompCube being actively in development, this project will probably be aband
 - If you have any feedback regarding the systems or the mod in general, you can contact me on Discord: patsanmck
 - A lot of things are still subject to change
 - Server-side is kept private because I am not sure if it's safe to make it public. You can view everything the game sends to the server if you are suspicious of somethings
-- https://ranked.beatsabercis.dpdns.org/ Live website
+- https://ranked.beatsabercis.dpdns.org/ Live website (CIS = region (usually refers to post-soviet countries), google it if you think I'm lying)
 
 
 
