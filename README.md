@@ -5,7 +5,7 @@
 > With that said, this mod went through thorough testing and had it's code reviewed by a human being. If you are ok with that, carry on.
 
 # Clarification
-With CompCube being actively development, this project will probably be abandoned after the release of CompCube, since it would be a better platform in general.
+With CompCube being actively development, this project will probably be abandoned after the release of CompCube, since it would be a better platform in general and it will save myself some money (VPS's are not cheap sadly)
 
 # Requirements
 - BSIPA (4.3.0+)
