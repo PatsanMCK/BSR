@@ -18,7 +18,7 @@ namespace BSR.UI.ViewControllers
         [UIComponent("opponent-pfp-img")] private readonly ImageView _pfpImage;
         [UIComponent("opponent-name-txt")] private readonly TextMeshProUGUI _nameText;
 
-        [UIValue("opponent-name")] public string OpponentName => string.IsNullOrEmpty(_match.EnemyName) ? "Opponent" : _match.EnemyName;
+        [UIValue("opponent-name")] public string OpponentName => $"<color={_match.EnemyColorTag}>{(string.IsNullOrEmpty(_match.EnemyName) ? "Opponent" : _match.EnemyName)}</color>";
         [UIValue("opponent-tier")] public string OpponentTier => _match.GetRankDetails(_match.EnemyElo) is var d ? $"<color={d.colorHex}>{d.tier}</color>" : "B";
         [UIValue("opponent-elo")] public string OpponentElo => $"{_match.EnemyElo}";
         [UIValue("opponent-avg-stars")] public string OpponentAvgStars => $"Top Page Avg: {_match.EnemyAvgStars:F2} ★";
@@ -53,6 +53,7 @@ namespace BSR.UI.ViewControllers
                 _match.EnemyPfp = enemyData["pfp"]?.ToString() ?? "";
                 _match.EnemyElo = (int?)enemyData["elo"] ?? 1000;
                 _match.EnemyAvgStars = (double?)enemyData["avgStars"] ?? 6.0;
+                _match.EnemyColorTag = enemyData["colorTag"]?.ToString() ?? "#FFFFFF";
                 _match.EnemyHp = RankedMatchManager.MaxHp;
             }
             RefreshUI();

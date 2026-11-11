@@ -33,6 +33,7 @@ namespace BSR.UI.ViewControllers
         private int _currentRound = 1;
         private int _currentMultiplier = 1;
         private string _pickerName = "Opponent";
+        private string _pickerColorTag = "#FFFFFF";
         private bool _canReroll = true;
 
         [UIComponent("card1-img")] private readonly ImageView _card1Img;
@@ -64,7 +65,7 @@ namespace BSR.UI.ViewControllers
         [UIValue("select-btn-text")] public string SelectBtnText => IsMyTurn ? "Select" : "Waiting...";
         [UIValue("reroll-btn-text")] public string RerollBtnText { get; set; } = "Reroll Hand (1 Left)";
         [UIValue("match-pool-header")] public string MatchPoolHeader => $"Round {_currentRound} ({_currentMultiplier}x DMG)  |  Pool: {_match.TargetMatchStars:F2} ★";
-        [UIValue("draft-turn-text")] public string DraftTurnText => IsMyTurn ? "<color=#00FF66>YOUR TURN TO PICK A MAP</color>" : $"<color=#FFAA00>Waiting for {_pickerName} to pick...</color>";
+        [UIValue("draft-turn-text")] public string DraftTurnText => IsMyTurn ? "<color=#00FF66>YOUR TURN TO PICK A MAP</color>" : $"<color=#FFAA00>Waiting for </color><color={_pickerColorTag}>{_pickerName}</color><color=#FFAA00> to pick...</color>";
         [UIValue("draft-timer-text")] public string DraftTimerText { get; set; } = "Pick Time Left: 90s";
 
         [UIValue("card1-title")] public string Card1Title { get; set; } = "Loading...";
@@ -91,12 +92,13 @@ namespace BSR.UI.ViewControllers
 
         // --- ROUND RESULTS & MATCH OVER PROPERTIES ---
         [UIValue("round-result-header")] public string RoundResultHeader => _currentMultiplier > 1 ? $"ROUND {_currentRound} DAMAGE REPORT ({_currentMultiplier}x MULTIPLIER!)" : $"ROUND {_currentRound} DAMAGE REPORT";
+        [UIValue("p1-name")] public string P1Name => $"<color={_match.MyColorTag}>{_match.MyName}</color>";
         [UIValue("p1-round-score")] public string P1RoundScore { get; set; } = "Score: 0";
         [UIValue("p1-hp-bar")] public string P1HpBar => FormatHpBar(_displayedP1Hp);
         [UIValue("p1-hp-text")] public string P1HpText => FormatHpText(_displayedP1Hp);
         [UIValue("p1-damage-taken")] public string P1DamageTaken { get; set; } = "0 DMG";
 
-        [UIValue("p2-name")] public string P2Name => _match.EnemyName;
+        [UIValue("p2-name")] public string P2Name => $"<color={_match.EnemyColorTag}>{_match.EnemyName}</color>";
         [UIValue("p2-round-score")] public string P2RoundScore { get; set; } = "Score: 0";
         [UIValue("p2-hp-bar")] public string P2HpBar => FormatHpBar(_displayedP2Hp);
         [UIValue("p2-hp-text")] public string P2HpText => FormatHpText(_displayedP2Hp);
@@ -201,10 +203,12 @@ namespace BSR.UI.ViewControllers
                     _match.EnemyPfp = enemy["pfp"]?.ToString() ?? "";
                     _match.EnemyElo = (int?)enemy["elo"] ?? 1000;
                     _match.EnemyAvgStars = (double?)enemy["avgStars"] ?? 6.0;
+                    _match.EnemyColorTag = enemy["colorTag"]?.ToString() ?? "#FFFFFF";
                 }
                 _currentRound = (int?)matchData["roundNumber"] ?? 1;
                 _currentMultiplier = (int?)matchData["multiplier"] ?? 1;
                 _pickerName = matchData["pickerName"]?.ToString() ?? "Opponent";
+                _pickerColorTag = matchData["pickerColorTag"]?.ToString() ?? _match.EnemyColorTag;
                 IsMyTurn = (bool?)matchData["isMyTurn"] ?? false;
                 ApplyCardsFromServer(matchData["cards"] as JArray);
             }
@@ -234,6 +238,7 @@ namespace BSR.UI.ViewControllers
                         _currentRound = (int?)data["roundNumber"] ?? (_currentRound + 1);
                         _currentMultiplier = (int?)data["multiplier"] ?? 1;
                         _pickerName = data["pickerName"]?.ToString() ?? "Opponent";
+                        _pickerColorTag = data["pickerColorTag"]?.ToString() ?? _match.EnemyColorTag;
                         IsMyTurn = (bool?)data["isMyTurn"] ?? false;
                         DraftTimerText = $"Pick Time Left: {(int?)data["timeLeft"] ?? 90}s";
                         ApplyCardsFromServer(data["cards"] as JArray);

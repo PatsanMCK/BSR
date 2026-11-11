@@ -91,7 +91,7 @@
         <horizontal spacing='8' align='Center'>
             <!-- YOU (LEFT) -->
             <vertical bg='round-rect-panel' pad='3' pref-width='44' align='Center' spacing='1'>
-                <text text='YOU' font-size='4.5' color='#00FFCC' align='Center'/>
+                <text text='~p1-name' font-size='4.5' overflow-mode='Ellipsis' align='Center'/>
                 <image id='p1-img' pref-width='14' pref-height='14'/>
                 <text text='~p1-round-score' font-size='4' align='Center'/>
                 <text text='~p1-hp-bar' font-size='4.2' align='Center'/>
@@ -103,7 +103,7 @@
 
             <!-- ENEMY (RIGHT) -->
             <vertical bg='round-rect-panel' pad='3' pref-width='44' align='Center' spacing='1'>
-                <text text='~p2-name' font-size='4.5' color='#FF5555' align='Center'/>
+                <text text='~p2-name' font-size='4.5' overflow-mode='Ellipsis' align='Center'/>
                 <image id='p2-img' pref-width='14' pref-height='14'/>
                 <text text='~p2-round-score' font-size='4' align='Center'/>
                 <text text='~p2-hp-bar' font-size='4.2' align='Center'/>

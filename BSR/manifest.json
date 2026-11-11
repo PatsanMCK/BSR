@@ -3,7 +3,7 @@
   "id": "BSR",
   "name": "BS Ranked",
   "author": "patsanmck",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "osu!lazer style 1v1 Ranked Matchmaking for Beat Saber",
   "gameVersion": "1.40.8",
   "dependsOn": {

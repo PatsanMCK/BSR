@@ -5,7 +5,7 @@
     <PluginId>BSR</PluginId>
     <PluginName>BS Ranked</PluginName>
     <Authors>patsanmck</Authors>
-    <Version>1.0.0</Version>
+    <Version>1.0.2</Version>
     <GameVersion>1.40.8</GameVersion>
     <Description>osu!lazer style 1v1 Ranked Matchmaking for Beat Saber</Description>
   </PropertyGroup>

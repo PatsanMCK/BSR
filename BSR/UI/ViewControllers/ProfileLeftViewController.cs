@@ -20,7 +20,7 @@ namespace BSR.UI.ViewControllers
         [UIComponent("pfp-img")] private readonly ImageView _pfpImage;
         [UIComponent("rank-modal")] private readonly ModalView _rankModal;
 
-        [UIValue("player-name")] public string PlayerName => _matchManager.MyName;
+        [UIValue("player-name")] public string PlayerName => $"<color={_matchManager.MyColorTag}>{_matchManager.MyName}</color>";
         [UIValue("rank-tier")] public string RankTier => _matchManager.GetRankDetails(_matchManager.MyElo) is var d ? $"<color={d.colorHex}>{d.tier}</color>" : "B";
         [UIValue("elo-clickable-text")] public string EloClickableText => $"<b>{_matchManager.MyElo}</b> ELO";
         [UIValue("avg-stars-text")] public string AvgStarsText => $"Top Page Avg: {_matchManager.MyAvgStars:F2} ★";

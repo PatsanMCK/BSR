@@ -5,6 +5,14 @@ namespace BSR.Managers
         public const int MaxHp = 100000;
         public static bool IsInRankedMatch { get; set; } = false;
 
+        public static string FormatColorTag(string hex)
+        {
+            if (string.IsNullOrWhiteSpace(hex)) return "#FFFFFF";
+            hex = hex.Trim();
+            if (!hex.StartsWith("#")) hex = "#" + hex;
+            return hex;
+        }
+
         // Player 1 (You)
         public string MySteamId { get; set; } = Plugin.LocalSteamId;
         public string MyName { get; set; } = Plugin.LocalUserName;
@@ -15,6 +23,12 @@ namespace BSR.Managers
         public int MyLosses { get; set; } = 0;
         public double MyAvgStars { get; set; } = 6.0;
         public int MyHp { get; set; } = MaxHp;
+        private string _myColorTag = "#FFFFFF";
+        public string MyColorTag
+        {
+            get => _myColorTag;
+            set => _myColorTag = FormatColorTag(value);
+        }
 
         // Player 2 (Opponent)
         public string EnemyName { get; set; } = "EnemyPlayer";
@@ -22,6 +36,12 @@ namespace BSR.Managers
         public int EnemyElo { get; set; } = 1000;
         public double EnemyAvgStars { get; set; } = 6.0;
         public int EnemyHp { get; set; } = MaxHp;
+        private string _enemyColorTag = "#FFFFFF";
+        public string EnemyColorTag
+        {
+            get => _enemyColorTag;
+            set => _enemyColorTag = FormatColorTag(value);
+        }
 
         public double TargetMatchStars => (MyAvgStars + EnemyAvgStars) / 2.0;
 

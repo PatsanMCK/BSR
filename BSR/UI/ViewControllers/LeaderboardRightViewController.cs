@@ -84,6 +84,7 @@ namespace BSR.UI.ViewControllers
                     string name = top1["name"]?.ToString() ?? "Player";
                     int elo = (int?)top1["elo"] ?? 1000;
                     bool isMe = (bool?)top1["isMe"] ?? false;
+                    string colorTag = RankedMatchManager.FormatColorTag(top1["colorTag"]?.ToString());
                     var d = _match.GetRankDetails(elo);
 
                     Top1Left = isMe
@@ -91,8 +92,8 @@ namespace BSR.UI.ViewControllers
                         : $"<color=#FFD700><b>#1</b></color>  <color={d.colorHex}>[{d.tier}]</color>";
 
                     Top1Right = isMe
-                        ? $"<color=#00FFCC><b>{name}</b> ({elo} ELO)</color>"
-                        : $"{name} <color=#AAAAAA>({elo} ELO)</color>";
+                        ? $"<color={colorTag}><b>{name}</b></color> <color=#00FFCC>({elo} ELO)</color>"
+                        : $"<color={colorTag}><b>{name}</b></color> <color=#AAAAAA>({elo} ELO)</color>";
                 }
                 else
                 {
@@ -121,17 +122,18 @@ namespace BSR.UI.ViewControllers
                 string name = p["name"]?.ToString() ?? "Player";
                 int elo = (int?)p["elo"] ?? 1000;
                 bool isMe = (bool?)p["isMe"] ?? false;
+                string colorTag = RankedMatchManager.FormatColorTag(p["colorTag"]?.ToString());
                 var tierDetails = _match.GetRankDetails(elo);
 
                 if (isMe)
                 {
                     leftText = $"<color=#00FFCC><b>#{rank}</b>  [{tierDetails.tier}]</color>";
-                    rightText = $"<color=#00FFCC><b>{name}</b> ({elo})</color>";
+                    rightText = $"<color={colorTag}><b>{name}</b></color> <color=#00FFCC>({elo})</color>";
                 }
                 else
                 {
                     leftText = $"<b>#{rank}</b>  <color={tierDetails.colorHex}>[{tierDetails.tier}]</color>";
-                    rightText = $"{name} <color=#AAAAAA>({elo})</color>";
+                    rightText = $"<color={colorTag}>{name}</color> <color=#AAAAAA>({elo})</color>";
                 }
             }
             else

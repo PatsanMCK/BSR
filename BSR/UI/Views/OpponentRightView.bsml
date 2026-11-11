@@ -5,7 +5,7 @@
         <!-- OPPONENT PFP, NAME BELOW IT, AND AVG STARS (Matches ProfileLeftView layout) -->
         <vertical bg='round-rect-panel' pad='3' pref-width='52' align='Center' spacing='1.2'>
             <image id='opponent-pfp-img' pref-width='18' pref-height='18' preserve-aspect='true'/>
-            <text id='opponent-name-txt' text='~opponent-name' font-size='4.4' color='#FFFFFF' align='Center'/>
+            <text id='opponent-name-txt' text='~opponent-name' font-size='4.4' align='Center'/>
             <text text='~opponent-avg-stars' font-size='2.8' color='#888888' align='Center'/>
         </vertical>
 

@@ -138,7 +138,8 @@ namespace BSR.Services
                             _matchManager.MyLeaderboardRank = (int?)data["leaderboardRank"] ?? _matchManager.MyLeaderboardRank;
                             _matchManager.MyWins = (int?)data["wins"] ?? _matchManager.MyWins;
                             _matchManager.MyLosses = (int?)data["losses"] ?? _matchManager.MyLosses;
-                            Plugin.Log.Info($"[BS Ranked] Loaded Server Profile: {_matchManager.MyName} | #{_matchManager.MyLeaderboardRank} | ELO: {_matchManager.MyElo}");
+                            _matchManager.MyColorTag = data["colorTag"]?.ToString() ?? _matchManager.MyColorTag;
+                            Plugin.Log.Info($"[BS Ranked] Loaded Server Profile: {_matchManager.MyName} | #{_matchManager.MyLeaderboardRank} | ELO: {_matchManager.MyElo} | ColorTag: {_matchManager.MyColorTag}");
                         }
 
                         _ = UnityMainThreadTaskScheduler.Factory.StartNew(() =>
