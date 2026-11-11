@@ -4,6 +4,9 @@
 > 
 > With that said, this mod went through thorough testing and had it's code reviewed by a human being. If you are ok with that, carry on.
 
+# Clarification
+With CompCube being actively development, this project will probably be abandoned after the release of CompCube, since it would be a better platform in general.
+
 # Requirements
 - BSIPA (4.3.0+)
 - BeatSaberMarkupLanguage (1.11.0+)
