@@ -21,6 +21,8 @@ With CompCube being actively in development, this project will probably be aband
 	- Map Draft system that takes maps from ScoreSaber Ranked
   
 ![UI Showcase](https://i.ibb.co/BHLY1SGq/Screenshot-20261110-195314.png)
+
+^ v1.0.0 screenshot
 # How does this work? 
 - In the match players have 100'000 HP, and after the map it calculates the damage dealt by another player.
 - Multipliers:
